@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AuthService } from '@/lib/auth';
+import { AuthService } from '@/app/lib/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
