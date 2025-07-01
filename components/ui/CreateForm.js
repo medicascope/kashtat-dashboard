@@ -1,17 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function CreateForm({ 
   title, 
   fields = [], 
   onSubmit, 
   onCancel, 
+  initialData = {},
+  submitText = 'Submit',
   isLoading = false 
 }) {
-  const [formData, setFormData] = useState(
-    fields.reduce((acc, field) => ({ ...acc, [field.name]: field.defaultValue || '' }), {})
-  );
+  // Initialize form data with proper defaults to avoid controlled/uncontrolled warning
+  const [formData, setFormData] = useState(() => {
+    const fieldDefaults = {};
+    fields.forEach(field => {
+      fieldDefaults[field.name] = initialData[field.name] || field.defaultValue || '';
+    });
+    return fieldDefaults;
+  });
+
+  // Handle changes to initialData for edit mode
+  useEffect(() => {
+    if (Object.keys(initialData).length > 0) {
+      const newFormData = {};
+      fields.forEach(field => {
+        newFormData[field.name] = initialData[field.name] || field.defaultValue || '';
+      });
+      setFormData(newFormData);
+    }
+  }, [initialData]); // Only depend on initialData
 
   const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -23,21 +41,24 @@ export default function CreateForm({
   };
 
   const renderField = (field) => {
-    const baseClassName = "w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent";
+    const baseClassName = "input-modern w-full";
+    const fieldValue = formData[field.name] || ''; // Ensure always defined
     
     switch (field.type) {
       case 'text':
       case 'email':
       case 'number':
+      case 'password':
         return (
           <input
             type={field.type}
             name={field.name}
-            value={formData[field.name]}
+            value={fieldValue}
             onChange={(e) => handleChange(field.name, e.target.value)}
             className={baseClassName}
             placeholder={field.placeholder}
             required={field.required}
+            step={field.step}
           />
         );
       
@@ -45,7 +66,7 @@ export default function CreateForm({
         return (
           <textarea
             name={field.name}
-            value={formData[field.name]}
+            value={fieldValue}
             onChange={(e) => handleChange(field.name, e.target.value)}
             rows={field.rows || 4}
             className={baseClassName}
@@ -58,7 +79,7 @@ export default function CreateForm({
         return (
           <select
             name={field.name}
-            value={formData[field.name]}
+            value={fieldValue}
             onChange={(e) => handleChange(field.name, e.target.value)}
             className={baseClassName}
             required={field.required}
@@ -89,7 +110,7 @@ export default function CreateForm({
           <input
             type="text"
             name={field.name}
-            value={formData[field.name]}
+            value={fieldValue}
             onChange={(e) => handleChange(field.name, e.target.value)}
             className={baseClassName}
             placeholder={field.placeholder}
@@ -101,7 +122,7 @@ export default function CreateForm({
 
   return (
     <div>
-      <h3 className="text-xl font-semibold text-white mb-6">{title}</h3>
+      {title && <h3 className="text-xl font-semibold text-white mb-6">{title}</h3>}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {fields.map((field) => (
@@ -135,10 +156,10 @@ export default function CreateForm({
             {isLoading ? (
               <div className="flex items-center">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Creating...
+                Saving...
               </div>
             ) : (
-              `Create ${title}`
+              submitText
             )}
           </button>
         </div>

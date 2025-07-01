@@ -1,13 +1,26 @@
 {
-    "name": "Auth",
+    "name": "User",
     "item": [
         {
             "name": "Admin",
             "item": [
                 {
-                    "name": "Login",
+                    "name": "Get Users",
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    },
                     "request": {
-                        "method": "POST",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
                         "header": [
                             {
                                 "key": "Accept",
@@ -17,7 +30,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"email\":\"superadmin@kashtat.com\",\n    \"password\":\"12345678\"\n}   ",
+                            "raw": "",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -25,7 +38,7 @@
                             }
                         },
                         "url": {
-                            "raw": "https://{{server_url}}/api/admin/v1/login",
+                            "raw": "https://{{server_url}}/api/admin/v1/users",
                             "protocol": "https",
                             "host": [
                                 "{{server_url}}"
@@ -34,15 +47,15 @@
                                 "api",
                                 "admin",
                                 "v1",
-                                "login"
+                                "users"
                             ]
                         }
                     },
                     "response": [
                         {
-                            "name": "Success Login",
+                            "name": "Get Countries",
                             "originalRequest": {
-                                "method": "POST",
+                                "method": "GET",
                                 "header": [
                                     {
                                         "key": "Accept",
@@ -50,17 +63,8 @@
                                         "type": "text"
                                     }
                                 ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n    \"email\":\"m.abou7agar@gmail.com\",\n    \"password\":\"Moham1478963\"\n}",
-                                    "options": {
-                                        "raw": {
-                                            "language": "json"
-                                        }
-                                    }
-                                },
                                 "url": {
-                                    "raw": "https://{{server_url}}/api/v1/login",
+                                    "raw": "https://{{server_url}}/api/v1/countries",
                                     "protocol": "https",
                                     "host": [
                                         "{{server_url}}"
@@ -68,7 +72,7 @@
                                     "path": [
                                         "api",
                                         "v1",
-                                        "login"
+                                        "countries"
                                     ]
                                 }
                             },
@@ -98,7 +102,7 @@
                                 },
                                 {
                                     "key": "X-Powered-By",
-                                    "value": "PHP/8.2.23"
+                                    "value": "PHP/8.2.24"
                                 },
                                 {
                                     "key": "Accept-Encoding",
@@ -110,7 +114,7 @@
                                 },
                                 {
                                     "key": "Date",
-                                    "value": "Sat, 19 Oct 2024 18:17:59 GMT"
+                                    "value": "Sun, 20 Oct 2024 19:28:23 GMT"
                                 },
                                 {
                                     "key": "Access-Control-Allow-Origin",
@@ -126,89 +130,12 @@
                                 }
                             ],
                             "cookie": [],
-                            "body": "{\n    \"status\": \"object\",\n    \"user\": {\n        \"id\": \"bd89efd6-9b7b-48de-bec2-54206472caa5\",\n        \"name\": \"Mohamed\",\n        \"email\": \"m.abou7agar@gmail.com\",\n        \"phone\": \"+201090608890\",\n        \"nid\": null,\n        \"avatar\": \"images/1728417428.png\",\n        \"points\": 0,\n        \"balance\": 0\n    },\n    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2thc2h0YXQudGVzdC9hcGkvdjEvbG9naW4iLCJpYXQiOjE3MjkzNjE4NzksIm5iZiI6MTcyOTM2MTg3OSwianRpIjoiUE9xSUdjcXU2Q25QbEt4eCIsInN1YiI6ImJkODllZmQ2LTliN2ItNDhkZS1iZWMyLTU0MjA2NDcyY2FhNSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.kGz9-TyXItN-VKLg9zMURNU3Jlh3XFnx5pesBCGW3es\",\n    \"message\": {\n        \"type\": \"object\",\n        \"code\": null,\n        \"name\": null,\n        \"description\": null\n    }\n}"
-                        },
-                        {
-                            "name": "Fail Login",
-                            "originalRequest": {
-                                "method": "POST",
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json",
-                                        "type": "text"
-                                    }
-                                ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n    \"email\":\"m.abou7agar@gmail.com\",\n    \"password\":\"Moham1478961\"\n}",
-                                    "options": {
-                                        "raw": {
-                                            "language": "json"
-                                        }
-                                    }
-                                },
-                                "url": {
-                                    "raw": "https://{{server_url}}/api/v1/login",
-                                    "protocol": "https",
-                                    "host": [
-                                        "{{server_url}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "v1",
-                                        "login"
-                                    ]
-                                }
-                            },
-                            "status": "Unauthorized",
-                            "code": 401,
-                            "_postman_previewlanguage": "json",
-                            "header": [
-                                {
-                                    "key": "Server",
-                                    "value": "nginx/1.27.1"
-                                },
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json; charset=utf-8"
-                                },
-                                {
-                                    "key": "Transfer-Encoding",
-                                    "value": "chunked"
-                                },
-                                {
-                                    "key": "Connection",
-                                    "value": "keep-alive"
-                                },
-                                {
-                                    "key": "X-Powered-By",
-                                    "value": "PHP/8.2.23"
-                                },
-                                {
-                                    "key": "Accept-Encoding",
-                                    "value": "gzip, deflate"
-                                },
-                                {
-                                    "key": "Cache-Control",
-                                    "value": "no-cache, private"
-                                },
-                                {
-                                    "key": "Date",
-                                    "value": "Sat, 19 Oct 2024 18:18:21 GMT"
-                                },
-                                {
-                                    "key": "Access-Control-Allow-Origin",
-                                    "value": "*"
-                                }
-                            ],
-                            "cookie": [],
-                            "body": "{\n    \"status\": \"error\",\n    \"message\": {\n        \"type\": \"error\",\n        \"code\": 401,\n        \"name\": \"unauthorized\",\n        \"description\": \"Wrong Username or password\"\n    }\n}"
+                            "body": "{\n    \"status\": \"object\",\n    \"countries\": [\n        {\n            \"id\": \"f70b7712-ec65-49f6-b4a4-d6a2e2bee6b0\",\n            \"name\": \"Dubai\",\n            \"code\": \"AE\"\n        }\n    ],\n    \"message\": {\n        \"type\": \"object\",\n        \"code\": null,\n        \"name\": null,\n        \"description\": null\n    }\n}"
                         }
                     ]
                 },
                 {
-                    "name": "Me",
+                    "name": "Get User By Id",
                     "protocolProfileBehavior": {
                         "disableBodyPruning": true
                     },
@@ -241,22 +168,23 @@
                             }
                         },
                         "url": {
-                            "raw": "https://{{server_url}}/api/admin/v1/me",
+                            "raw": "https://{{server_url}}/api/v1/admin/countries/f70b7712-ec65-49f6-b4a4-d6a2e2bee6b0",
                             "protocol": "https",
                             "host": [
                                 "{{server_url}}"
                             ],
                             "path": [
                                 "api",
-                                "admin",
                                 "v1",
-                                "me"
+                                "admin",
+                                "countries",
+                                "f70b7712-ec65-49f6-b4a4-d6a2e2bee6b0"
                             ]
                         }
                     },
                     "response": [
                         {
-                            "name": "Me",
+                            "name": "Get Country By Id",
                             "originalRequest": {
                                 "method": "GET",
                                 "header": [
@@ -267,7 +195,7 @@
                                     }
                                 ],
                                 "url": {
-                                    "raw": "https://{{server_url}}/api/v1/me",
+                                    "raw": "https://{{server_url}}/api/v1/countries/e49e6359-6d2b-4853-9d4d-14f486a82ed0",
                                     "protocol": "https",
                                     "host": [
                                         "{{server_url}}"
@@ -275,7 +203,8 @@
                                     "path": [
                                         "api",
                                         "v1",
-                                        "me"
+                                        "countries",
+                                        "e49e6359-6d2b-4853-9d4d-14f486a82ed0"
                                     ]
                                 }
                             },
@@ -284,93 +213,61 @@
                             "_postman_previewlanguage": "json",
                             "header": [
                                 {
-                                    "key": "keep-alive",
-                                    "value": "timeout=5, max=100"
+                                    "key": "Server",
+                                    "value": "nginx/1.27.1"
                                 },
                                 {
-                                    "key": "x-powered-by",
-                                    "value": "PHP/8.2.22"
+                                    "key": "Content-Type",
+                                    "value": "application/json; charset=utf-8"
                                 },
                                 {
-                                    "key": "cache-control",
+                                    "key": "Transfer-Encoding",
+                                    "value": "chunked"
+                                },
+                                {
+                                    "key": "Connection",
+                                    "value": "keep-alive"
+                                },
+                                {
+                                    "key": "Vary",
+                                    "value": "Accept-Encoding"
+                                },
+                                {
+                                    "key": "X-Powered-By",
+                                    "value": "PHP/8.2.24"
+                                },
+                                {
+                                    "key": "Accept-Encoding",
+                                    "value": "gzip, deflate"
+                                },
+                                {
+                                    "key": "Cache-Control",
                                     "value": "no-cache, private"
                                 },
                                 {
-                                    "key": "content-type",
-                                    "value": "application/json"
+                                    "key": "Date",
+                                    "value": "Sun, 20 Oct 2024 19:28:55 GMT"
                                 },
                                 {
-                                    "key": "x-ratelimit-limit",
-                                    "value": "60"
-                                },
-                                {
-                                    "key": "x-ratelimit-remaining",
-                                    "value": "57"
-                                },
-                                {
-                                    "key": "access-control-allow-origin",
+                                    "key": "Access-Control-Allow-Origin",
                                     "value": "*"
                                 },
                                 {
-                                    "key": "content-length",
-                                    "value": "423"
+                                    "key": "Access-Control-Allow-Origin",
+                                    "value": "*"
                                 },
                                 {
-                                    "key": "date",
-                                    "value": "Fri, 06 Sep 2024 14:29:06 GMT"
-                                },
-                                {
-                                    "key": "server",
-                                    "value": "LiteSpeed"
-                                },
-                                {
-                                    "key": "x-turbo-charged-by",
-                                    "value": "LiteSpeed"
+                                    "key": "Content-Encoding",
+                                    "value": "gzip"
                                 }
                             ],
                             "cookie": [],
-                            "body": "{\n    \"user\": {\n        \"id\": 1,\n        \"name\": \"Super Admin\",\n        \"email\": \"superadmin@altair.com\",\n        \"email_verified_at\": \"2024-09-02T16:12:05.000000Z\",\n        \"created_at\": \"2024-09-02T16:12:05.000000Z\",\n        \"updated_at\": \"2024-09-02T17:55:09.000000Z\",\n        \"roles\": [\n            {\n                \"id\": 2,\n                \"name\": \"super_admin\",\n                \"guard_name\": \"api\",\n                \"created_at\": \"2024-09-02T16:07:58.000000Z\",\n                \"updated_at\": \"2024-09-02T16:07:58.000000Z\",\n                \"pivot\": {\n                    \"model_type\": \"App\\\\Models\\\\User\",\n                    \"model_id\": \"1\",\n                    \"role_id\": \"2\"\n                }\n            }\n        ]\n    }\n}"
+                            "body": "{\n    \"status\": \"object\",\n    \"country\": {\n        \"id\": \"e49e6359-6d2b-4853-9d4d-14f486a82ed0\",\n        \"name\": \"Dubai 5\",\n        \"code\": \"AE 1\"\n    },\n    \"message\": {\n        \"type\": \"object\",\n        \"code\": null,\n        \"name\": null,\n        \"description\": null\n    }\n}"
                         }
                     ]
                 },
                 {
-                    "name": "Request Forget Password",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"email\":\"m.abou7agar3@gmail.com\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "https://{{server_url}}/api/admin/v1/request_forget_password",
-                            "protocol": "https",
-                            "host": [
-                                "{{server_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "admin",
-                                "v1",
-                                "request_forget_password"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Change Password",
+                    "name": "Create User",
                     "request": {
                         "auth": {
                             "type": "bearer",
@@ -391,16 +288,42 @@
                             }
                         ],
                         "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"email\":\"superadmin@altair.com\",\n    \"password\":\"12345678\",\n    \"password_confirmation\":\"12345678\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "email",
+                                    "value": "m.abou7agar5@gmail.com",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "name",
+                                    "value": "Mohamed Visitor",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "phone",
+                                    "value": "+201090608896",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "user_type",
+                                    "value": "citizen",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "avatar",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "Moham1478963",
+                                    "type": "text"
                                 }
-                            }
+                            ]
                         },
                         "url": {
-                            "raw": "https://{{server_url}}/api/admin/v1/change_password",
+                            "raw": "https://{{server_url}}/api/admin/v1/users",
                             "protocol": "https",
                             "host": [
                                 "{{server_url}}"
@@ -409,16 +332,122 @@
                                 "api",
                                 "admin",
                                 "v1",
-                                "change_password"
+                                "users"
                             ]
                         }
                     },
-                    "response": []
+                    "response": [
+                        {
+                            "name": "Create Country",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json",
+                                        "type": "text"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "name",
+                                            "value": "Dubai 5",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "code",
+                                            "value": "AE 1",
+                                            "type": "text"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "https://{{server_url}}/api/v1/countries",
+                                    "protocol": "https",
+                                    "host": [
+                                        "{{server_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "countries"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Server",
+                                    "value": "nginx/1.27.1"
+                                },
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json; charset=utf-8"
+                                },
+                                {
+                                    "key": "Transfer-Encoding",
+                                    "value": "chunked"
+                                },
+                                {
+                                    "key": "Connection",
+                                    "value": "keep-alive"
+                                },
+                                {
+                                    "key": "Vary",
+                                    "value": "Accept-Encoding"
+                                },
+                                {
+                                    "key": "X-Powered-By",
+                                    "value": "PHP/8.2.24"
+                                },
+                                {
+                                    "key": "Accept-Encoding",
+                                    "value": "gzip, deflate"
+                                },
+                                {
+                                    "key": "Cache-Control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "Date",
+                                    "value": "Sun, 20 Oct 2024 19:28:40 GMT"
+                                },
+                                {
+                                    "key": "Access-Control-Allow-Origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "Access-Control-Allow-Origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "Content-Encoding",
+                                    "value": "gzip"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"object\",\n    \"country\": {\n        \"id\": \"e49e6359-6d2b-4853-9d4d-14f486a82ed0\",\n        \"name\": \"Dubai 5\",\n        \"code\": \"AE 1\"\n    },\n    \"message\": {\n        \"type\": \"object\",\n        \"code\": null,\n        \"name\": null,\n        \"description\": null\n    }\n}"
+                        }
+                    ]
                 },
                 {
-                    "name": "Forgot Change Password",
+                    "name": "Update User",
                     "request": {
-                        "method": "POST",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
                         "header": [
                             {
                                 "key": "Accept",
@@ -428,7 +457,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"email\":\"m.abou7agar3@gmail.com\",\n    \"password\":\"12345678\",\n    \"password_confirmation\":\"12345678\",\n    \"token\":\"146067\"\n}",
+                            "raw": "{\n    \"name\":\"Test Dubai\",\n    \"code\":\"AE\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -436,16 +465,143 @@
                             }
                         },
                         "url": {
-                            "raw": "https://{{server_url}}/api/admin/v1/request_change_password",
-                            "protocol": "https",
+                            "raw": "{{server_url}}/api/v1/admin/countries/ab8af348-966c-434b-b032-891a411bacd7",
                             "host": [
                                 "{{server_url}}"
                             ],
                             "path": [
                                 "api",
-                                "admin",
                                 "v1",
-                                "request_change_password"
+                                "admin",
+                                "countries",
+                                "ab8af348-966c-434b-b032-891a411bacd7"
+                            ]
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "Update Country",
+                            "originalRequest": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json",
+                                        "type": "text"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"name\":\"Test Dubai\",\n    \"code\":\"AE\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{server_url}}/api/v1/countries/e49e6359-6d2b-4853-9d4d-14f486a82ed0",
+                                    "host": [
+                                        "{{server_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "countries",
+                                        "e49e6359-6d2b-4853-9d4d-14f486a82ed0"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Server",
+                                    "value": "nginx/1.27.1"
+                                },
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json; charset=utf-8"
+                                },
+                                {
+                                    "key": "Transfer-Encoding",
+                                    "value": "chunked"
+                                },
+                                {
+                                    "key": "Connection",
+                                    "value": "keep-alive"
+                                },
+                                {
+                                    "key": "Vary",
+                                    "value": "Accept-Encoding"
+                                },
+                                {
+                                    "key": "X-Powered-By",
+                                    "value": "PHP/8.2.24"
+                                },
+                                {
+                                    "key": "Accept-Encoding",
+                                    "value": "gzip, deflate"
+                                },
+                                {
+                                    "key": "Cache-Control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "Date",
+                                    "value": "Sun, 20 Oct 2024 19:29:40 GMT"
+                                },
+                                {
+                                    "key": "Access-Control-Allow-Origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "Access-Control-Allow-Origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "Content-Encoding",
+                                    "value": "gzip"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"object\",\n    \"country\": {\n        \"id\": \"e49e6359-6d2b-4853-9d4d-14f486a82ed0\",\n        \"name\": \"Test Dubai\",\n        \"code\": \"AE\"\n    },\n    \"message\": {\n        \"type\": \"object\",\n        \"code\": null,\n        \"name\": null,\n        \"description\": null\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Delete User",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{server_url}}/api/v1/admin/countries/e49e6359-6d2b-4853-9d4d-14f486a82ed0",
+                            "host": [
+                                "{{server_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "countries",
+                                "e49e6359-6d2b-4853-9d4d-14f486a82ed0"
                             ]
                         }
                     },

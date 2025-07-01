@@ -5,18 +5,25 @@ import { AuthService } from '../lib/auth';
 import Sidebar from '@/components/Sidebar';
 import PageHeader from '@/components/ui/PageHeader';
 import Categories from '@/components/sections/Categories';
+import Countries from '@/components/sections/Countries';
+import Users from '@/components/sections/Users';
+import Cities from '@/components/sections/Cities';
+import Partners from '@/components/sections/Partners';
+import Branches from '@/components/sections/Branches';
+import Packages from '@/components/sections/Packages';
+import Orders from '@/components/sections/Orders';
 
 // Mapping sections to their components
 const SECTION_COMPONENTS = {
   categories: Categories,
+  countries: Countries,
+  users: Users,
+  cities: Cities,
+  partners: Partners,
+  branches: Branches,
+  packages: Packages,
+  orders: Orders,
   // TODO: Add other section components as they are created
-  // countries: Countries,
-  // users: Users,
-  // cities: Cities,
-  // partners: Partners,
-  // branches: Branches,
-  // packages: Packages,
-  // orders: Orders,
 };
 
 // Section names for display
@@ -58,7 +65,7 @@ const SUB_ITEM_NAMES = {
   'edit-package': 'Edit Package',
   'package-pricing': 'Package Pricing',
   'get-orders': 'View Orders',
-  'order-details': 'Order Details',
+  'order-analytics': 'Order Analytics',
   'order-status': 'Order Status',
   'order-tracking': 'Order Tracking',
 };
@@ -68,6 +75,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('categories');
   const [activeSubItem, setActiveSubItem] = useState('get-categories');
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {
@@ -86,10 +94,44 @@ export default function DashboardPage() {
 
   const handleSectionChange = (sectionId) => {
     setActiveSection(sectionId);
+    
+    // Set default sub-item for each section
+    switch (sectionId) {
+      case 'categories':
+        setActiveSubItem('get-categories');
+        break;
+      case 'countries':
+        setActiveSubItem('get-countries');
+        break;
+      case 'users':
+        setActiveSubItem('get-users');
+        break;
+      case 'cities':
+        setActiveSubItem('get-cities');
+        break;
+      case 'partners':
+        setActiveSubItem('get-partners');
+        break;
+      case 'branches':
+        setActiveSubItem('get-branches');
+        break;
+      case 'packages':
+        setActiveSubItem('get-packages');
+        break;
+      case 'orders':
+        setActiveSubItem('get-orders');
+        break;
+      default:
+        setActiveSubItem(null);
+    }
   };
 
   const handleSubItemChange = (subItemId) => {
     setActiveSubItem(subItemId);
+  };
+
+  const handleSidebarCollapse = (isCollapsed) => {
+    setCollapsed(isCollapsed);
   };
 
   const handleAddNew = () => {
@@ -178,10 +220,11 @@ export default function DashboardPage() {
         activeSubItem={activeSubItem}
         onSectionChange={handleSectionChange}
         onSubItemChange={handleSubItemChange}
+        onSidebarCollapse={handleSidebarCollapse}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 dashboard-content">
+      <div className={`flex-1 dashboard-content transition-all duration-300 ease-in-out ${collapsed ? 'ml-20' : 'ml-72'}`}>
         <div className="h-full overflow-y-auto">
           <div className="p-8">
             <div className="max-w-7xl mx-auto space-y-8">

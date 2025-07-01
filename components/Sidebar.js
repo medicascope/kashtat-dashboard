@@ -114,27 +114,43 @@ const SECTIONS = [
     ),
     subItems: [
       { id: 'get-orders', name: 'View Orders', action: 'list' },
-      { id: 'order-details', name: 'Order Details', action: 'view' },
+      { id: 'order-analytics', name: 'Order Analytics', action: 'analytics' },
       { id: 'order-status', name: 'Order Status', action: 'manage' },
       { id: 'order-tracking', name: 'Order Tracking', action: 'track' }
     ]
   }
 ];
 
-export default function Sidebar({ 
-  user, 
-  onLogout, 
-  activeSection, 
-  activeSubItem, 
-  onSectionChange, 
-  onSubItemChange 
+export default function Sidebar({
+  user,
+  onLogout,
+  activeSection,
+  activeSubItem,
+  onSectionChange,
+  onSubItemChange,
+  onSidebarCollapse
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState(['categories']);
 
+  const toggleCollapse = () => {
+    const newCollapsed = !collapsed;
+    setCollapsed(newCollapsed);
+    if (onSidebarCollapse) {
+      onSidebarCollapse(newCollapsed);
+    }
+  };
+
+  const expandSidebar = () => {
+    setCollapsed(false);
+    if (onSidebarCollapse) {
+      onSidebarCollapse(false);
+    }
+  };
+
   const toggleSection = (sectionId) => {
-    setExpandedSections(prev => 
-      prev.includes(sectionId) 
+    setExpandedSections(prev =>
+      prev.includes(sectionId)
         ? prev.filter(id => id !== sectionId)
         : [...prev, sectionId]
     );
@@ -149,14 +165,14 @@ export default function Sidebar({
   };
 
   return (
-    <div className={`${collapsed ? 'w-20' : 'w-72'} transition-all duration-300 ease-in-out flex-shrink-0`}>
+    <div className={`${collapsed ? 'w-20' : 'w-72'} transition-all duration-300 ease-in-out flex-shrink-0 fixed left-0 top-0 h-full z-30`}>
       <div className="h-full dashboard-sidebar flex flex-col">
-        {/* Brand Header */}
-        <div className="p-6 border-b border-slate-700/50">
+        {/* Brand Header - Fixed */}
+        <div className="p-6 border-b border-slate-700/50 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className={`flex items-center ${collapsed ? 'justify-center' : ''}`}>
               <div className="sidebar-brand">
-                <span className="text-xl font-bold text-white">K</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} id="Layer_1" data-name="Layer 1" viewBox="0 0 216.02 216.02"><path style={{fill: 'white'}} d="M139.69,123.47a69.27,69.27,0,0,1,5.58-26.62A71.16,71.16,0,0,1,183.13,59a68.16,68.16,0,0,1,13.43-4.19,73.23,73.23,0,0,1,14.33-1.39A15.39,15.39,0,0,0,226.27,38V15.39A15.4,15.4,0,0,0,210.89,0a120.49,120.49,0,0,0-56.72,13.58A125.12,125.12,0,0,0,111,50.39a126.19,126.19,0,0,0-41.93-33,115.93,115.93,0,0,0-25.8-9.17,125.85,125.85,0,0,0-27.91-3A15.38,15.38,0,0,0,0,20.52V43.14A15.38,15.38,0,0,0,15.38,58.53a69.5,69.5,0,0,1,27.76,5.58A71.16,71.16,0,0,1,81,102a69.32,69.32,0,0,1,5.58,27.75v3.32h0v38.19s-5.44-38.11-25.74-38.11c-1.57,0-2.52,0-3-.08H15.38A15.38,15.38,0,0,0,0,148.44v22.63a15.38,15.38,0,0,0,15.38,15.38h71.2v14.18A15.39,15.39,0,0,0,102,216H124.3a15.38,15.38,0,0,0,15.38-15.39V186.45h71.21a15.39,15.39,0,0,0,15.38-15.38V148.44a15.39,15.39,0,0,0-15.38-15.39H167.33c-.49,0-1.12.08-1.9.08-20.3,0-25.75,38.11-25.75,38.11V124.6C139.68,124.22,139.68,123.84,139.69,123.47Z" /></svg>
               </div>
               {!collapsed && (
                 <div className="ml-3">
@@ -165,9 +181,11 @@ export default function Sidebar({
                 </div>
               )}
             </div>
+
+            {/* Collapse button when expanded */}
             {!collapsed && (
               <button
-                onClick={() => setCollapsed(!collapsed)}
+                onClick={toggleCollapse}
                 className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all duration-200"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,80 +193,80 @@ export default function Sidebar({
                 </svg>
               </button>
             )}
+
+            {/* Expand button when collapsed */}
+            {collapsed && (
+              <button
+                onClick={expandSidebar}
+                className="w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white shadow-lg hover:shadow-xl border border-slate-600/50 hover:border-slate-500 transition-all duration-200 flex items-center justify-center"
+                title="Expand sidebar"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Navigation Menu */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          <nav className="space-y-1">
-            {SECTIONS.map((section) => (
-              <div key={section.id} className="space-y-1">
-                <button
-                  onClick={() => toggleSection(section.id)}
-                  className={`w-full flex items-center justify-between sidebar-item ${
-                    activeSection === section.id ? 'active' : ''
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <span className="flex-shrink-0">{section.icon}</span>
-                    {!collapsed && <span className="ml-3">{section.name}</span>}
-                  </div>
-                  {!collapsed && (
-                    <svg 
-                      className={`w-4 h-4 transform transition-transform duration-200 ${
-                        expandedSections.includes(section.id) ? 'rotate-90' : ''
-                      }`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  )}
-                </button>
-                
-                {!collapsed && expandedSections.includes(section.id) && (
-                  <div className="space-y-1 animate-fade-in">
-                    {section.subItems.map((subItem) => (
-                      <button
-                        key={subItem.id}
-                        onClick={() => handleSubItemClick(section.id, subItem.id)}
-                        className={`w-full text-left sidebar-subitem ${
-                          activeSubItem === subItem.id && activeSection === section.id
-                            ? 'active'
-                            : ''
-                        }`}
+        {/* Navigation Menu - Scrollable */}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto overflow-x-hidden px-4 py-6 scrollbar-none">
+            <nav className="space-y-1">
+              {SECTIONS.map((section) => (
+                <div key={section.id} className="space-y-1">
+                  <button
+                    onClick={() => toggleSection(section.id)}
+                    className={`w-full flex items-center justify-between sidebar-item ${activeSection === section.id ? 'active' : ''
+                      }`}
+                  >
+                    <div className="flex items-center">
+                      <span className="flex-shrink-0">{section.icon}</span>
+                      {!collapsed && <span className="ml-3">{section.name}</span>}
+                    </div>
+                    {!collapsed && (
+                      <svg
+                        className={`w-4 h-4 transform transition-transform duration-200 ${expandedSections.includes(section.id) ? 'rotate-90' : ''
+                          }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <span className="flex items-center">
-                          <div className="w-1.5 h-1.5 rounded-full bg-current opacity-50 mr-3"></div>
-                          {subItem.name}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </nav>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
+                  </button>
+
+                  {!collapsed && expandedSections.includes(section.id) && (
+                    <div className="space-y-1 animate-fade-in">
+                      {section.subItems.map((subItem) => (
+                        <button
+                          key={subItem.id}
+                          onClick={() => handleSubItemClick(section.id, subItem.id)}
+                          className={`w-full text-left sidebar-subitem ${activeSubItem === subItem.id && activeSection === section.id
+                              ? 'active'
+                              : ''
+                            }`}
+                        >
+                          <span className="flex items-center">
+                            <div className="w-1.5 h-1.5 rounded-full bg-current opacity-50 mr-3"></div>
+                            {subItem.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
+          </div>
         </div>
 
-        {/* Collapse Toggle for Collapsed State */}
-        {collapsed && (
-          <div className="px-4 pb-4">
-            <button
-              onClick={() => setCollapsed(false)}
-              className="w-full p-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all duration-200 flex items-center justify-center"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        )}
 
-        {/* User Profile & Logout */}
+
+        {/* User Profile & Logout - Fixed */}
         {!collapsed && (
-          <div className="p-6 border-t border-slate-700/50">
+          <div className="p-6 border-t border-slate-700/50 flex-shrink-0">
             <div className="space-y-4">
               {/* User Info */}
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/50">

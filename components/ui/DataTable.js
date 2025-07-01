@@ -37,7 +37,7 @@ export default function DataTable({
                   placeholder="Search records..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input-modern pl-10 w-80"
+                  className="input-modern pl-10 w-80 ml-14"
                 />
               </div>
               {searchTerm && (
