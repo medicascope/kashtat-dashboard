@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import DataTable from '../ui/DataTable';
 import PackageForm from '../ui/PackageForm';
 import Modal from '../ui/Modal';
@@ -145,12 +145,7 @@ export default function Packages({ activeSubItem, onNavigate }) {
       )
     }
   ], []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const fetchData = useCallback(async () => {
+  const fetchData = async () => {
     // Prevent duplicate calls
     if (isLoadingRef.current) {
       return;
@@ -232,7 +227,7 @@ export default function Packages({ activeSubItem, onNavigate }) {
       isLoadingRef.current = false;
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchData();
@@ -244,7 +239,7 @@ export default function Packages({ activeSubItem, onNavigate }) {
       }
       isLoadingRef.current = false;
     };
-  }, [fetchData]);
+  }, []);
 
   const handleCreate = async (data) => {
     try {
@@ -257,7 +252,7 @@ export default function Packages({ activeSubItem, onNavigate }) {
         throw new Error(response.error || 'Failed to create package');
       }
     } catch (err) {
-      throw new Error(`Failed to create package: ${err.message}`);
+      // throw new Error(`Failed to create package: ${err.message}`);
     }
   };
 
@@ -273,7 +268,7 @@ export default function Packages({ activeSubItem, onNavigate }) {
         throw new Error(response.error || 'Failed to update package');
       }
     } catch (err) {
-      throw new Error(`Failed to update package: ${err.message}`);
+      // throw new Error(`Failed to update package: ${err.message}`);
     }
   };
 

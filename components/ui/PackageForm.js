@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 export default function PackageForm({ 
   onSubmit, 
@@ -15,7 +15,10 @@ export default function PackageForm({
   submitText = 'Create Package',
   isLoading = false 
 }) {
-  const [formData, setFormData] = useState({
+  const [activeTab, setActiveTab] = useState('basic');
+
+  // Memoize the initial form data to prevent re-creation on every render
+  const initialFormData = useMemo(() => ({
     name: '',
     overview: '',
     type: 'package',
@@ -38,13 +41,14 @@ export default function PackageForm({
     ],
     cover_image: null,
     ...initialData
-  });
+  }), [initialData]);
 
-  const [activeTab, setActiveTab] = useState('basic');
+  const [formData, setFormData] = useState(initialFormData);
 
+  // Update form data when initialData changes
   useEffect(() => {
-    setFormData(prev => ({ ...prev, ...initialData }));
-  }, [initialData]);
+    setFormData(initialFormData);
+  }, [initialFormData]);
 
   const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -83,12 +87,12 @@ export default function PackageForm({
     onSubmit && onSubmit(formData);
   };
 
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: 'basic', label: 'Basic Info', icon: '📝' },
     { id: 'pricing', label: 'Pricing', icon: '💰' },
     { id: 'relations', label: 'Relations', icon: '🔗' },
     { id: 'policies', label: 'Policies', icon: '📋' },
-  ];
+  ], []);
 
   const renderBasicInfo = () => (
     <div className="space-y-6">
