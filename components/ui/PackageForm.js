@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 export default function PackageForm({ 
   onSubmit, 
@@ -16,9 +16,10 @@ export default function PackageForm({
   isLoading = false 
 }) {
   const [activeTab, setActiveTab] = useState('basic');
+  const initializedRef = useRef(false);
 
-  // Memoize the initial form data to prevent re-creation on every render
-  const initialFormData = useMemo(() => ({
+  // Initialize form data with defaults
+  const [formData, setFormData] = useState({
     name: '',
     overview: '',
     type: 'package',
@@ -39,16 +40,16 @@ export default function PackageForm({
     prices: [
       { price: '100', user_type: 'citizen', age_group: 'adult' }
     ],
-    cover_image: null,
-    ...initialData
-  }), [initialData]);
+    cover_image: null
+  });
 
-  const [formData, setFormData] = useState(initialFormData);
-
-  // Update form data when initialData changes
+  // Only initialize form data once when initialData changes
   useEffect(() => {
-    setFormData(initialFormData);
-  }, [initialFormData]);
+    if (!initializedRef.current && Object.keys(initialData).length > 0) {
+      setFormData(prev => ({ ...prev, ...initialData }));
+      initializedRef.current = true;
+    }
+  }, [initialData]);
 
   const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
