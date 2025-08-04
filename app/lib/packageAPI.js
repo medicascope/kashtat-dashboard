@@ -96,8 +96,8 @@ export class PackageAPI {
   static async createPackage(packageData) {
     try {
       // Validate required fields
-      if (!packageData.name || !packageData.overview || !packageData.partner_id) {
-        throw new Error('Name, overview, and partner are required fields');
+      if (!packageData.name || !packageData.overview || !packageData.partner_id || !packageData.category_id) {
+        throw new Error('Name, overview, partner, and category are required fields');
       }
 
       const formData = new FormData();
@@ -124,10 +124,8 @@ export class PackageAPI {
       formData.append('partial_refund_percentage', packageData.partial_refund_percentage || '10');
       formData.append('partner_id', packageData.partner_id);
       
-      // Only append category_id if it has a valid value
-      if (packageData.category_id && packageData.category_id.trim() !== '') {
-        formData.append('category_id', packageData.category_id);
-      }
+      // Category is now required
+      formData.append('category_id', packageData.category_id);
       
       formData.append('status', packageData.status || '1');
 
@@ -207,7 +205,26 @@ export class PackageAPI {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to get the error response body
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+          if (errorData.errors) {
+            const validationErrors = Object.entries(errorData.errors)
+              .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+              .join('; ');
+            errorMessage = validationErrors;
+          }
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+        }
+        
+        const error = new Error(errorMessage);
+        error.response = response;
+        throw error;
       }
 
       const data = await response.json();
@@ -235,8 +252,8 @@ export class PackageAPI {
   static async updatePackage(id, packageData) {
     try {
       // Validate required fields
-      if (!packageData.name || !packageData.overview || !packageData.partner_id) {
-        throw new Error('Name, overview, and partner are required fields');
+      if (!packageData.name || !packageData.overview || !packageData.partner_id || !packageData.category_id) {
+        throw new Error('Name, overview, partner, and category are required fields');
       }
 
       const formData = new FormData();
@@ -263,10 +280,8 @@ export class PackageAPI {
       formData.append('partial_refund_percentage', packageData.partial_refund_percentage || '10');
       formData.append('partner_id', packageData.partner_id);
       
-      // Only append category_id if it has a valid value
-      if (packageData.category_id && packageData.category_id.trim() !== '') {
-        formData.append('category_id', packageData.category_id);
-      }
+      // Category is now required
+      formData.append('category_id', packageData.category_id);
       
       formData.append('status', packageData.status || '1');
 
@@ -346,7 +361,26 @@ export class PackageAPI {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to get the error response body
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+          if (errorData.errors) {
+            const validationErrors = Object.entries(errorData.errors)
+              .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+              .join('; ');
+            errorMessage = validationErrors;
+          }
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+        }
+        
+        const error = new Error(errorMessage);
+        error.response = response;
+        throw error;
       }
 
       const data = await response.json();

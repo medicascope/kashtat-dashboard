@@ -255,7 +255,27 @@ export default function Packages({ activeSubItem, onNavigate }) {
         throw new Error(response.error || 'Failed to create package');
       }
     } catch (err) {
-      setError(`Failed to create package: ${err.message}`);
+      // Try to parse API error response
+      let errorMessage = err.message;
+      try {
+        if (err.response) {
+          const errorData = await err.response.json();
+          if (errorData.errors) {
+            // Format validation errors
+            const errorMessages = Object.entries(errorData.errors)
+              .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+              .join('; ');
+            errorMessage = errorMessages;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        }
+      } catch (parseError) {
+        // If we can't parse the error, use the original message
+        console.error('Error parsing API response:', parseError);
+      }
+      
+      setError(`Failed to create package: ${errorMessage}`);
       console.error('Create package error:', err);
     } finally {
       setSubmitting(false);
@@ -276,7 +296,27 @@ export default function Packages({ activeSubItem, onNavigate }) {
         throw new Error(response.error || 'Failed to update package');
       }
     } catch (err) {
-      setError(`Failed to update package: ${err.message}`);
+      // Try to parse API error response
+      let errorMessage = err.message;
+      try {
+        if (err.response) {
+          const errorData = await err.response.json();
+          if (errorData.errors) {
+            // Format validation errors
+            const errorMessages = Object.entries(errorData.errors)
+              .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+              .join('; ');
+            errorMessage = errorMessages;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        }
+      } catch (parseError) {
+        // If we can't parse the error, use the original message
+        console.error('Error parsing API response:', parseError);
+      }
+      
+      setError(`Failed to update package: ${errorMessage}`);
       console.error('Update package error:', err);
     } finally {
       setSubmitting(false);
@@ -313,7 +353,10 @@ export default function Packages({ activeSubItem, onNavigate }) {
           <strong>Error:</strong> {error}
         </div>
         <button
-          onClick={fetchData}
+          onClick={() => {
+            setError(null);
+            fetchData();
+          }}
           className="mt-2 text-red-600 hover:text-red-800 underline"
         >
           Try again

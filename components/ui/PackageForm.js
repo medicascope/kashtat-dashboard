@@ -102,8 +102,18 @@ export default function PackageForm({
       return;
     }
     
+    if (!formData.category_id) {
+      alert('Category is required');
+      return;
+    }
+    
     if (!formData.due_date) {
       alert('Due date is required');
+      return;
+    }
+    
+    if (!formData.cover_image) {
+      alert('Cover image is required');
       return;
     }
     
@@ -185,14 +195,15 @@ export default function PackageForm({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category (Optional)
+            Category *
           </label>
           <select
             value={formData.category_id || ''}
             onChange={(e) => handleChange('category_id', e.target.value)}
             className="input-modern w-full"
+            required
           >
-            <option value="">No Category</option>
+            <option value="">Select Category</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -246,13 +257,14 @@ export default function PackageForm({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Cover Image
+          Cover Image *
         </label>
         <input
           type="file"
           onChange={handleFileChange}
           className="input-modern w-full"
           accept="image/*"
+          required
         />
       </div>
     </div>
