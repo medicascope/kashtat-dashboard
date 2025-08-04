@@ -22,6 +22,7 @@ export default function Packages({ activeSubItem, onNavigate }) {
   const [error, setError] = useState(null);
   const [editingPackage, setEditingPackage] = useState(null);
   const [deletingPackage, setDeletingPackage] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Prevent duplicate API calls (React StrictMode protection)
   const isLoadingRef = useRef(false);
@@ -243,6 +244,8 @@ export default function Packages({ activeSubItem, onNavigate }) {
 
   const handleCreate = async (data) => {
     try {
+      setError(null);
+      setSubmitting(true);
       const response = await PackageAPI.createPackage(data);
       
       if (response.success) {
@@ -252,12 +255,17 @@ export default function Packages({ activeSubItem, onNavigate }) {
         throw new Error(response.error || 'Failed to create package');
       }
     } catch (err) {
-      // throw new Error(`Failed to create package: ${err.message}`);
+      setError(`Failed to create package: ${err.message}`);
+      console.error('Create package error:', err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleEdit = async (data) => {
     try {
+      setError(null);
+      setSubmitting(true);
       const response = await PackageAPI.updatePackage(editingPackage.id, data);
       
       if (response.success) {
@@ -268,7 +276,10 @@ export default function Packages({ activeSubItem, onNavigate }) {
         throw new Error(response.error || 'Failed to update package');
       }
     } catch (err) {
-      // throw new Error(`Failed to update package: ${err.message}`);
+      setError(`Failed to update package: ${err.message}`);
+      console.error('Update package error:', err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -318,6 +329,13 @@ export default function Packages({ activeSubItem, onNavigate }) {
           <div className="card-premium">
             <div className="p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-6">Create New Package</h3>
+              {error && (
+                <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+                  <div className="text-red-800">
+                    <strong>Error:</strong> {error}
+                  </div>
+                </div>
+              )}
               <PackageForm
                 categories={categories}
                 partners={partners}
@@ -328,6 +346,7 @@ export default function Packages({ activeSubItem, onNavigate }) {
                 onSubmit={handleCreate}
                 onCancel={() => onNavigate('get-packages')}
                 submitText="Create Package"
+                isLoading={submitting}
               />
             </div>
           </div>
@@ -343,6 +362,13 @@ export default function Packages({ activeSubItem, onNavigate }) {
                   <div className="mb-4 p-3 bg-gray-100 rounded-md text-sm">
                     <strong>Editing:</strong> {editingPackage.name || 'Unnamed Package'}
                   </div>
+                  {error && (
+                    <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+                      <div className="text-red-800">
+                        <strong>Error:</strong> {error}
+                      </div>
+                    </div>
+                  )}
                   <PackageForm
                     categories={categories}
                     partners={partners}
@@ -376,6 +402,7 @@ export default function Packages({ activeSubItem, onNavigate }) {
                       onNavigate('get-packages');
                     }}
                     submitText="Update Package"
+                    isLoading={submitting}
                   />
                 </div>
               ) : (

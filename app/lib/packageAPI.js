@@ -234,14 +234,110 @@ export class PackageAPI {
   // Update package
   static async updatePackage(id, packageData) {
     try {
+      // Validate required fields
+      if (!packageData.name || !packageData.overview || !packageData.partner_id) {
+        throw new Error('Name, overview, and partner are required fields');
+      }
+
       const formData = new FormData();
       
       // Basic fields
       formData.append('name', packageData.name);
       formData.append('overview', packageData.overview);
+      formData.append('type', packageData.type);
+      formData.append('working_days', packageData.working_days || 'sunday,monday,tuesday,wednesday,thursday');
+      formData.append('discount_percentage', packageData.discount_percentage || '0');
+      
+      // Convert due_date from YYYY-MM-DD to DD-MM-YYYY format for API
+      let dueDate = packageData.due_date || '2025-12-31';
+      if (dueDate) {
+        const dateParts = dueDate.split('-');
+        if (dateParts.length === 3) {
+          dueDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+        }
+      }
+      formData.append('due_date', dueDate);
+      formData.append('order_id', packageData.order_id || '0');
+      formData.append('full_refund_within', packageData.full_refund_within || '30');
+      formData.append('partial_refund_within', packageData.partial_refund_within || '15');
+      formData.append('partial_refund_percentage', packageData.partial_refund_percentage || '10');
+      formData.append('partner_id', packageData.partner_id);
+      
+      // Only append category_id if it has a valid value
+      if (packageData.category_id && packageData.category_id.trim() !== '') {
+        formData.append('category_id', packageData.category_id);
+      }
+      
+      formData.append('status', packageData.status || '1');
+
+      // Arrays - only send if they have valid values
+      if (packageData.speaker_ids && packageData.speaker_ids.length > 0) {
+        packageData.speaker_ids.forEach(id => {
+          if (id && id.trim() !== '') {
+            formData.append('speaker_ids[]', id);
+          }
+        });
+      }
+
+      if (packageData.entertainment_ids && packageData.entertainment_ids.length > 0) {
+        packageData.entertainment_ids.forEach(id => {
+          if (id && id.trim() !== '') {
+            formData.append('entertainment_ids[]', id);
+          }
+        });
+      }
+
+      if (packageData.rule_ids && packageData.rule_ids.length > 0) {
+        packageData.rule_ids.forEach(id => {
+          if (id && id.trim() !== '') {
+            formData.append('rule_ids[]', id);
+          }
+        });
+      }
+
+      if (packageData.image_ids && packageData.image_ids.length > 0) {
+        packageData.image_ids.forEach(id => {
+          if (id && id.trim() !== '') {
+            formData.append('image_ids[]', id);
+          }
+        });
+      }
+
+      if (packageData.branch_ids && packageData.branch_ids.length > 0) {
+        packageData.branch_ids.forEach(id => {
+          if (id && id.trim() !== '') {
+            formData.append('branch_ids[]', id);
+          }
+        });
+      }
+
+      // Prices - Add default pricing if none provided
+      const prices = packageData.prices && packageData.prices.length > 0 
+        ? packageData.prices 
+        : [{ price: '100', user_type: 'citizen', age_group: 'adult' }];
+      
+      prices.forEach((price, index) => {
+        formData.append(`prices[${index}][price]`, price.price);
+        formData.append(`prices[${index}][user_type]`, price.user_type);
+        formData.append(`prices[${index}][age_group]`, price.age_group);
+      });
+
+      // Cover image
+      if (packageData.cover_image) {
+        formData.append('cover_image', packageData.cover_image);
+      }
 
       const headers = this.getHeaders();
       delete headers['Content-Type'];
+
+      // Debug: Log what we're sending
+      console.log('Updating package with data:', {
+        name: packageData.name,
+        partner_id: packageData.partner_id,
+        category_id: packageData.category_id,
+        due_date: dueDate,
+        type: packageData.type
+      });
 
       const response = await fetch(`${API_BASE_URL}/packages/${id}`, {
         method: 'POST',

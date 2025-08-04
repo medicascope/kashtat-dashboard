@@ -85,6 +85,43 @@ export default function PackageForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name || !formData.name.trim()) {
+      alert('Package name is required');
+      return;
+    }
+    
+    if (!formData.overview || !formData.overview.trim()) {
+      alert('Package overview is required');
+      return;
+    }
+    
+    if (!formData.partner_id) {
+      alert('Partner is required');
+      return;
+    }
+    
+    if (!formData.due_date) {
+      alert('Due date is required');
+      return;
+    }
+    
+    // Validate prices
+    if (!formData.prices || formData.prices.length === 0) {
+      alert('At least one price tier is required');
+      return;
+    }
+    
+    for (let i = 0; i < formData.prices.length; i++) {
+      const price = formData.prices[i];
+      if (!price.price || parseFloat(price.price) <= 0) {
+        alert(`Price tier ${i + 1} must have a valid price`);
+        return;
+      }
+    }
+    
+    console.log('Submitting package data:', formData);
     onSubmit && onSubmit(formData);
   };
 
