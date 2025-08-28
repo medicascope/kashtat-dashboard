@@ -2,7 +2,7 @@
 
 import { AuthService } from './auth';
 
-const API_BASE_URL = 'https://app.kashtat.co/api/admin/v1';
+const API_BASE_URL = 'https://api.kashtat.co/v2/admin';
 
 export class PartnerAPI {
   static getHeaders() {

@@ -1,38 +1,21 @@
 'use client';
 
-const API_BASE_URL = 'https://app.kashtat.co/api/admin/v1';
+import { request } from "./request";
+
+const API_BASE_URL = 'https://api.kashtat.co/v2/admin';
 
 export class AuthService {
   static async login(email, password) {
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+      const response = await request(`${API_BASE_URL}/login`, {
+        email,
+        password,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message?.description || 'Login failed');
-      }
-
-      // Store token in localStorage
-      if (data.token) {
-        localStorage.setItem('kashtat_token', data.token);
-        localStorage.setItem('kashtat_user', JSON.stringify(data.user));
-      }
+      localStorage.setItem('user', JSON.stringify(response.user));
 
       return {
         success: true,
-        user: data.user,
-        token: data.token,
+        user: response.user,
       };
     } catch (error) {
       return {

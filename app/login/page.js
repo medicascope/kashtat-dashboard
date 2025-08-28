@@ -45,7 +45,7 @@ export default function LoginPage() {
     setForgotSuccess(false);
 
     try {
-      const response = await fetch('https://app.kashtat.co/api/admin/v1/request_forget_password', {
+      const response = await fetch('https://api.kashtat.co/v2/admin/request_forget_password', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',

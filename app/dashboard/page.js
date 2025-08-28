@@ -79,8 +79,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {
-      window.location.href = '/login';
-      return;
+      // window.location.href = '/login';
+      // return;
     }
 
     const userData = AuthService.getUser();
