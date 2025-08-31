@@ -28,8 +28,7 @@ export default function LoginPage() {
     setError('');
 
     const result = await AuthService.login(email, password);
-    
-    if (result.success) {
+    if (result.authenticated) {
       window.location.href = '/dashboard';
     } else {
       setError(result.error);

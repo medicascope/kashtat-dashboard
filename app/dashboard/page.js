@@ -78,14 +78,17 @@ export default function DashboardPage() {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    if (!AuthService.isAuthenticated()) {
-      // window.location.href = '/login';
-      // return;
-    }
+    setIsLoading(true);
+    AuthService.getStatus().then(userData => {
+      if (!userData.authenticated) {
+        console.log(userData);
+        window.location.href = '/login';
+        return;
+      }
+      setUser(userData);
+      setIsLoading(false);
+    });
 
-    const userData = AuthService.getUser();
-    setUser(userData);
-    setIsLoading(false);
   }, []);
 
   const handleLogout = () => {
@@ -94,7 +97,7 @@ export default function DashboardPage() {
 
   const handleSectionChange = (sectionId) => {
     setActiveSection(sectionId);
-    
+
     // Set default sub-item for each section
     switch (sectionId) {
       case 'categories':
@@ -146,15 +149,15 @@ export default function DashboardPage() {
 
   const renderMainContent = () => {
     const SectionComponent = SECTION_COMPONENTS[activeSection];
-    
+
     if (SectionComponent) {
       // Render the specific section component
-      return <SectionComponent 
-        activeSubItem={activeSubItem} 
+      return <SectionComponent
+        activeSubItem={activeSubItem}
         onNavigate={handleSubItemChange}
       />;
     }
-    
+
     // Fallback for sections that don't have components yet
     return (
       <div className="card-premium animate-fade-in-up">

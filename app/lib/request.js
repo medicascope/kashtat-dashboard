@@ -12,7 +12,7 @@ export const requestToken = async (refresh = false) => {
         const data = await response.json();
         if (data.token) {
             saveToken(data.token);
-            return data;
+            return data.token;
         }
     } catch (e) {
         console.log(e);
@@ -68,11 +68,11 @@ export const request = async (url, payload = {}, method = 'GET', headers) => {
 
         const response = await fetch(url, options);
 
-        if (!response.ok) {
-            // const data = await request('https://api.oblien.com/auth/token', {}, 'POST');
-            // if(data.token){
-            //     localStorage.setItem('token', data.token);
-            // }
+        if (!response.ok && response.status == 401) {
+            const token = await getToken(true);
+            if(token){
+                localStorage.setItem('token', token);
+            }
             console.log(`HTTP error! Status: ${response.status}`);
         }
 
