@@ -43,10 +43,12 @@ export default function Overview() {
 
       console.log('Stats Data:', { usersData, bookingsData, partnersData });
 
-      // Extract stats from response
-      const userStats = usersData.success ? (usersData.data?.stats || usersData.data || {}) : {};
-      const bookingStats = bookingsData.success ? (bookingsData.data?.stats || bookingsData.data || {}) : {};
-      const partnerStats = partnersData.success ? (partnersData.data?.stats || partnersData.data || {}) : {};
+      // Extract overview from data.overview (backend returns: {success: true, data: {overview: {...}}})
+      const userStats = usersData.success && usersData.data?.overview ? usersData.data.overview : {};
+      const bookingStats = bookingsData.success && bookingsData.data?.overview ? bookingsData.data.overview : {};
+      const partnerStats = partnersData.success && partnersData.data?.overview ? partnersData.data.overview : {};
+
+      console.log('Extracted:', { userStats, bookingStats, partnerStats });
 
       setStats({
         users: userStats,
