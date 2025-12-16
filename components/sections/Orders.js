@@ -420,6 +420,7 @@ export default function Orders({ activeSubItem, onNavigate }) {
               }}
               showAddButton={false}
               showDeleteButton={false}
+              exportable={true}
             />
           </div>
         );
@@ -625,6 +626,7 @@ export default function Orders({ activeSubItem, onNavigate }) {
               showAddButton={false}
               showEditButton={false}
               showDeleteButton={false}
+              exportable={true}
             />
           </div>
         );
@@ -684,6 +686,7 @@ export default function Orders({ activeSubItem, onNavigate }) {
                        packageName.toLowerCase().includes(query.toLowerCase());
               }}
               showAddButton={false}
+              exportable={true}
             />
 
             {/* View Order Modal */}

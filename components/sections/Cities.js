@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { CityAPI } from '../../app/lib/cityAPI';
-import { CountryAPI } from '../../app/lib/countryAPI';
 import DataTable from '../ui/DataTable';
 import CreateForm from '../ui/CreateForm';
 import LoadingSkeleton, { FormSkeleton } from '../ui/LoadingSkeleton';
@@ -24,18 +23,6 @@ const TABLE_COLUMNS = [
     )
   },
   {
-    key: 'country',
-    label: 'Country',
-    render: (value) => (
-      <div className="flex items-center space-x-2">
-        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-          {value?.code}
-        </span>
-        <span className="text-sm text-slate-600">{value?.name}</span>
-      </div>
-    )
-  },
-  {
     key: 'area',
     label: 'Area',
     render: (value) => (
@@ -48,12 +35,10 @@ const TABLE_COLUMNS = [
 
 export default function Cities({ activeSubItem, onNavigate }) {
   const [cities, setCities] = useState([]);
-  const [countries, setCountries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
-  const [selectedCountryFilter, setSelectedCountryFilter] = useState('');
   
   // Modal states
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, city: null });
@@ -62,18 +47,6 @@ export default function Cities({ activeSubItem, onNavigate }) {
   // Prevent duplicate API calls (React StrictMode protection)
   const isLoadingRef = useRef(false);
   const abortControllerRef = useRef(null);
-
-  // Load cities and countries when component mounts
-  const loadCountries = useCallback(async () => {
-    try {
-      const result = await CountryAPI.getCountries();
-      if (result.success) {
-        setCountries(result.countries);
-      }
-    } catch (error) {
-      console.error('Failed to load countries:', error);
-    }
-  }, []);
 
   const loadCities = useCallback(async () => {
     // Prevent duplicate calls
@@ -94,7 +67,7 @@ export default function Cities({ activeSubItem, onNavigate }) {
     setError(null);
     
     try {
-      const result = await CityAPI.getCities(selectedCountryFilter || null);
+      const result = await CityAPI.getCities();
       
       // Check if request was aborted
       if (abortControllerRef.current?.signal.aborted) {
@@ -118,13 +91,8 @@ export default function Cities({ activeSubItem, onNavigate }) {
       isLoadingRef.current = false;
       setIsLoading(false);
     }
-  }, [selectedCountryFilter]);
+  }, []);
 
-  useEffect(() => {
-    loadCountries();
-  }, [loadCountries]);
-
-  // Reload cities when country filter changes
   useEffect(() => {
     loadCities();
     
@@ -137,8 +105,8 @@ export default function Cities({ activeSubItem, onNavigate }) {
     };
   }, [loadCities]);
 
-  // Generate form fields with countries dropdown
-  const getFormFields = useMemo(() => [
+  // Form fields for city
+  const FORM_FIELDS = [
     {
       name: 'name',
       label: 'City Name',
@@ -154,18 +122,8 @@ export default function Cities({ activeSubItem, onNavigate }) {
       placeholder: 'Enter city code...',
       required: true,
       help: 'Short unique code for the city (e.g., 001_02, NYC, LON)'
-    },
-    {
-      name: 'country_id',
-      label: 'Country',
-      type: 'select',
-      required: true,
-      options: countries.map(country => ({
-        value: country.id,
-        label: `${country.name} (${country.code})`
-      }))
     }
-  ], [countries]);
+  ];
 
   const handleCreate = async (formData) => {
     setIsSubmitting(true);
@@ -174,8 +132,7 @@ export default function Cities({ activeSubItem, onNavigate }) {
     try {
       const result = await CityAPI.createCity(
         formData.name,
-        formData.code,
-        formData.country_id
+        formData.code
       );
       
       if (result.success) {
@@ -293,30 +250,15 @@ export default function Cities({ activeSubItem, onNavigate }) {
                 <h2 className="text-2xl font-bold text-slate-800">All Cities</h2>
                 <p className="text-slate-600 mt-1">{cities.length} cities found</p>
               </div>
-              <div className="flex items-center space-x-3">
-                {/* Country Filter */}
-                <select
-                  value={selectedCountryFilter}
-                  onChange={(e) => setSelectedCountryFilter(e.target.value)}
-                  className="input-modern"
-                >
-                  <option value="">All Countries</option>
-                  {countries.map(country => (
-                    <option key={country.id} value={country.id}>
-                      {country.name} ({country.code})
-                    </option>
-                  ))}
-                </select>
-                <button 
-                  onClick={loadCities}
-                  className="btn-ghost flex items-center"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>Refresh</span>
-                </button>
-              </div>
+              <button 
+                onClick={loadCities}
+                className="btn-ghost flex items-center"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Refresh</span>
+              </button>
             </div>
             
             {cities.length === 0 ? (
@@ -327,12 +269,7 @@ export default function Cities({ activeSubItem, onNavigate }) {
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-slate-800 mb-3">No Cities Found</h3>
-                <p className="text-slate-600 mb-8">
-                  {selectedCountryFilter 
-                    ? 'No cities found for the selected country.' 
-                    : 'Start by creating your first city to manage locations.'
-                  }
-                </p>
+                <p className="text-slate-600 mb-8">Start by creating your first city to manage locations.</p>
                 <button 
                   onClick={() => onNavigate && onNavigate('add-city')}
                   className="btn-primary flex items-center"
@@ -381,7 +318,7 @@ export default function Cities({ activeSubItem, onNavigate }) {
             
             <CreateForm
               title="City"
-              fields={getFormFields}
+              fields={FORM_FIELDS}
               onSubmit={handleCreate}
               onCancel={() => setError(null)}
               isLoading={isSubmitting}

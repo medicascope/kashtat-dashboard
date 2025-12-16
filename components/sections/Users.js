@@ -51,10 +51,11 @@ const FORM_FIELDS = [
   },
   {
     name: 'avatar',
-    label: 'Avatar',
-    type: 'file',
-    accept: 'image/*',
-    help: 'Upload user avatar image (optional)'
+    label: 'Avatar URL',
+    type: 'text',
+    placeholder: 'Enter avatar image URL...',
+    required: false,
+    help: 'Provide a URL for the user avatar image (optional)'
   }
 ];
 
@@ -533,21 +534,7 @@ function EditUserForm({ user, onSubmit, onCancel, isLoading }) {
   const [phone, setPhone] = useState(user?.phone || '');
   const [userType, setUserType] = useState(user?.user_type || 'citizen');
   const [password, setPassword] = useState('');
-  const [avatar, setAvatar] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(
-    user?.avatar 
-      ? (user.avatar.startsWith('http') ? user.avatar : `https://app.kashtat.co/${user.avatar}`)
-      : ''
-  );
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAvatar(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
+  const [avatar, setAvatar] = useState(user?.avatar || '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -671,23 +658,43 @@ function EditUserForm({ user, onSubmit, onCancel, isLoading }) {
         </p>
       </div>
 
-      {/* Avatar Upload */}
+      {/* Avatar URL */}
       <div>
         <label htmlFor="userAvatar" className="block text-sm font-semibold text-slate-700 mb-3">
-          Update Avatar (Optional)
+          Avatar URL (Optional)
         </label>
         <input
           id="userAvatar"
-          type="file"
-          accept="image/*"
-          onChange={handleAvatarChange}
-          className="input-modern w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-500 file:text-white hover:file:bg-blue-600 file:transition-colors"
+          type="text"
+          value={avatar}
+          onChange={(e) => setAvatar(e.target.value)}
+          className="input-modern w-full"
+          placeholder="Enter avatar image URL..."
           disabled={isLoading}
         />
         <p className="text-sm text-slate-500 mt-2">
-          Upload a new avatar to replace the current one (JPG, PNG, GIF up to 5MB)
+          Provide a URL for the user avatar image
         </p>
       </div>
+
+      {/* Avatar Preview */}
+      {avatar && (
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-3">
+            Avatar Preview
+          </label>
+          <div className="w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+            <img 
+              src={avatar} 
+              alt="Avatar preview" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex space-x-4 pt-6 border-t border-slate-200">

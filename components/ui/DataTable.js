@@ -8,7 +8,8 @@ export default function DataTable({
   onEdit, 
   onDelete, 
   searchable = true,
-  actionable = true 
+  actionable = true,
+  exportable = true
 }) {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -18,6 +19,34 @@ export default function DataTable({
       String(item[column.key]).toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+
+  const handleExport = () => {
+    // Convert data to CSV format
+    const headers = columns.map(col => col.label).join(',');
+    const rows = filteredData.map(item => 
+      columns.map(col => {
+        const value = item[col.key];
+        // Handle values that might contain commas or quotes
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value || '';
+      }).join(',')
+    );
+    
+    const csv = [headers, ...rows].join('\n');
+    
+    // Create blob and download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6">
@@ -49,8 +78,21 @@ export default function DataTable({
                 </button>
               )}
             </div>
-            <div className="flex items-center space-x-2 text-sm text-slate-600">
-              <span>{filteredData.length} of {data.length} records</span>
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-slate-600">
+                <span>{filteredData.length} of {data.length} records</span>
+              </div>
+              {exportable && data.length > 0 && (
+                <button
+                  onClick={handleExport}
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all duration-200"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Export CSV
+                </button>
+              )}
             </div>
           </div>
         </div>

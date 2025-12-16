@@ -42,10 +42,11 @@ const FORM_FIELDS = [
   },
   {
     name: 'image',
-    label: 'Partner Logo',
-    type: 'file',
-    accept: 'image/*',
-    help: 'Upload partner logo or image (optional)'
+    label: 'Partner Logo URL',
+    type: 'text',
+    placeholder: 'Enter logo image URL...',
+    required: false,
+    help: 'Provide a URL for the partner logo image (optional)'
   }
 ];
 
@@ -94,7 +95,7 @@ const TABLE_COLUMNS = [
         rel="noopener noreferrer"
         className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
       >
-        {value.length > 30 ? `${value.substring(0, 30)}...` : value}
+        {value && value.length > 30 ? `${value.substring(0, 30)}...` : (value || 'N/A')}
       </a>
     )
   }
@@ -514,21 +515,7 @@ function EditPartnerForm({ partner, onSubmit, onCancel, isLoading }) {
   const [email, setEmail] = useState(partner?.email || '');
   const [phone, setPhone] = useState(partner?.phone || '');
   const [site, setSite] = useState(partner?.site || '');
-  const [image, setImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(
-    partner?.image 
-      ? (partner.image.startsWith('http') ? partner.image : `https://app.kashtat.co/${partner.image}`)
-      : ''
-  );
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
+  const [image, setImage] = useState(partner?.image || '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -546,22 +533,6 @@ function EditPartnerForm({ partner, onSubmit, onCancel, isLoading }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Current Logo Preview */}
-      {previewUrl && (
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-3">
-            Current Logo
-          </label>
-          <div className="w-20 h-20 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-            <img 
-              src={previewUrl} 
-              alt="Partner logo" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      )}
-
       {/* Partner Name */}
       <div>
         <label htmlFor="partnerName" className="block text-sm font-semibold text-slate-700 mb-3">
@@ -630,23 +601,43 @@ function EditPartnerForm({ partner, onSubmit, onCancel, isLoading }) {
         />
       </div>
 
-      {/* Logo Upload */}
+      {/* Logo URL */}
       <div>
         <label htmlFor="partnerImage" className="block text-sm font-semibold text-slate-700 mb-3">
-          Update Logo (Optional)
+          Logo URL (Optional)
         </label>
         <input
           id="partnerImage"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="input-modern w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-500 file:text-white hover:file:bg-purple-600 file:transition-colors"
+          type="text"
+          value={image}
+          onChange={(e) => setImage(e.target.value)}
+          className="input-modern w-full"
+          placeholder="Enter logo image URL..."
           disabled={isLoading}
         />
         <p className="text-sm text-slate-500 mt-2">
-          Upload a new logo to replace the current one (JPG, PNG, GIF up to 5MB)
+          Provide a URL for the partner logo image
         </p>
       </div>
+
+      {/* Logo Preview */}
+      {image && (
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-3">
+            Logo Preview
+          </label>
+          <div className="w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+            <img 
+              src={image} 
+              alt="Logo preview" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex space-x-4 pt-6 border-t border-slate-200">

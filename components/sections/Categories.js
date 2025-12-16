@@ -9,6 +9,14 @@ import { ConfirmModal } from '../ui/Modal';
 
 const FORM_FIELDS = [
   {
+    name: 'id',
+    label: 'Category ID',
+    type: 'text',
+    placeholder: 'Enter category ID (e.g., adventure, beach)...',
+    required: true,
+    help: 'Unique identifier for the category (lowercase, no spaces)'
+  },
+  {
     name: 'name',
     label: 'Category Name',
     type: 'text',
@@ -16,11 +24,18 @@ const FORM_FIELDS = [
     required: true
   },
   {
-    name: 'image',
-    label: 'Category Image',
-    type: 'file',
-    accept: 'image/*',
-    help: 'Upload an image for this category'
+    name: 'description',
+    label: 'Description',
+    type: 'text',
+    placeholder: 'Enter category description...',
+    required: false
+  },
+  {
+    name: 'icon',
+    label: 'Category Icon URL',
+    type: 'text',
+    placeholder: 'Enter icon URL...',
+    help: 'Provide a URL for the category icon'
   }
 ];
 
@@ -36,13 +51,13 @@ const TABLE_COLUMNS = [
     render: (value) => <span className="text-sm text-slate-800 font-semibold">{value}</span>
   },
   {
-    key: 'image',
-    label: 'Image',
+    key: 'icon',
+    label: 'Icon',
     render: (value) => (
       value ? (
         <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-slate-200">
           <img 
-            src={value.startsWith('http') ? value : `https://app.kashtat.co/${value}`} 
+            src={value} 
             alt="Category" 
             className="w-full h-full object-cover"
           />
@@ -55,6 +70,16 @@ const TABLE_COLUMNS = [
         </div>
       )
     )
+  },
+  {
+    key: 'description',
+    label: 'Description',
+    render: (value) => <span className="text-sm text-slate-600">{value || '-'}</span>
+  },
+  {
+    key: 'count',
+    label: 'Packages',
+    render: (value) => <span className="text-sm text-slate-500">{value || 0}</span>
   }
 ];
 
@@ -87,7 +112,7 @@ export default function Categories({ activeSubItem, onNavigate }) {
       if (!mountedRef.current) return;
       
       if (result.success) {
-        setCategories(result.categories);
+        setCategories(result.categories || []);
       } else {
         setError(result.error);
         setCategories([]);
@@ -119,17 +144,23 @@ export default function Categories({ activeSubItem, onNavigate }) {
     setError(null);
     
     try {
-      const result = await CategoryAPI.createCategory(
-        formData.name,
-        formData.image
-      );
+      const result = await CategoryAPI.createCategory({
+        id: formData.id,
+        name: formData.name,
+        icon: formData.icon,
+        description: formData.description
+      });
       
       if (result.success) {
         // Refresh the categories list
         await loadCategories();
         setError(null);
+        // Navigate back to get-categories after successful creation
+        if (onNavigate) {
+          onNavigate('get-categories');
+        }
       } else {
-        setError(result.error);
+        setError(result.error || result.message);
       }
     } catch (error) {
       setError('Failed to create category');
@@ -149,11 +180,11 @@ export default function Categories({ activeSubItem, onNavigate }) {
   const handleEditSave = async (editData) => {
     setIsLoading(true);
     try {
-      const result = await CategoryAPI.updateCategory(
-        editData.id, 
-        editData.name, 
-        editData.image
-      );
+      const result = await CategoryAPI.updateCategory(editData.id, {
+        name: editData.name,
+        icon: editData.icon,
+        description: editData.description
+      });
       
       if (result.success) {
         await loadCategories();
@@ -164,7 +195,7 @@ export default function Categories({ activeSubItem, onNavigate }) {
           onNavigate('get-categories');
         }
       } else {
-        setError(result.error);
+        setError(result.error || result.message);
       }
     } catch (error) {
       setError('Failed to update category');
@@ -277,6 +308,7 @@ export default function Categories({ activeSubItem, onNavigate }) {
                 onDelete={handleDeleteClick}
                 searchable={true}
                 actionable={true}
+                exportable={true}
               />
             )}
           </div>
@@ -424,21 +456,8 @@ export default function Categories({ activeSubItem, onNavigate }) {
 // Edit Category Form Component
 function EditCategoryForm({ category, onSubmit, onCancel, isLoading }) {
   const [name, setName] = useState(category?.name || '');
-  const [image, setImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(
-    category?.image 
-      ? (category.image.startsWith('http') ? category.image : `https://app.kashtat.co/${category.image}`)
-      : ''
-  );
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
+  const [description, setDescription] = useState(category?.description || '');
+  const [icon, setIcon] = useState(category?.icon || '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -447,7 +466,8 @@ function EditCategoryForm({ category, onSubmit, onCancel, isLoading }) {
     onSubmit({
       id: category.id,
       name: name.trim(),
-      image: image
+      icon: icon.trim(),
+      description: description.trim()
     });
   };
 
@@ -470,39 +490,59 @@ function EditCategoryForm({ category, onSubmit, onCancel, isLoading }) {
         />
       </div>
 
-      {/* Current Image Preview */}
-      {previewUrl && (
+      {/* Description */}
+      <div>
+        <label htmlFor="categoryDescription" className="block text-sm font-semibold text-slate-700 mb-3">
+          Description
+        </label>
+        <input
+          id="categoryDescription"
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="input-modern w-full"
+          placeholder="Enter category description..."
+          disabled={isLoading}
+        />
+      </div>
+
+      {/* Icon URL */}
+      <div>
+        <label htmlFor="categoryIcon" className="block text-sm font-semibold text-slate-700 mb-3">
+          Icon URL
+        </label>
+        <input
+          id="categoryIcon"
+          type="text"
+          value={icon}
+          onChange={(e) => setIcon(e.target.value)}
+          className="input-modern w-full"
+          placeholder="Enter icon URL..."
+          disabled={isLoading}
+        />
+        <p className="text-sm text-slate-500 mt-2">
+          Provide a URL for the category icon
+        </p>
+      </div>
+
+      {/* Icon Preview */}
+      {icon && (
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-3">
-            Current Image
+            Icon Preview
           </label>
           <div className="w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
             <img 
-              src={previewUrl} 
-              alt="Category preview" 
+              src={icon} 
+              alt="Category icon preview" 
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
             />
           </div>
         </div>
       )}
-
-      {/* Image Upload */}
-      <div>
-        <label htmlFor="categoryImage" className="block text-sm font-semibold text-slate-700 mb-3">
-          Update Image (Optional)
-        </label>
-        <input
-          id="categoryImage"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="input-modern w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-500 file:text-white hover:file:bg-blue-600 file:transition-colors"
-          disabled={isLoading}
-        />
-        <p className="text-sm text-slate-500 mt-2">
-          Upload a new image to replace the current one (JPG, PNG, GIF up to 5MB)
-        </p>
-      </div>
 
       {/* Action Buttons */}
       <div className="flex space-x-4 pt-6 border-t border-slate-200">

@@ -184,4 +184,72 @@ export class OrderAPI {
       };
     }
   }
+
+  // Get available order statuses (static data)
+  static getOrderStatuses() {
+    return [
+      { value: 'pending', label: 'Pending' },
+      { value: 'confirmed', label: 'Confirmed' },
+      { value: 'processing', label: 'Processing' },
+      { value: 'completed', label: 'Completed' },
+      { value: 'cancelled', label: 'Cancelled' },
+      { value: 'refunded', label: 'Refunded' }
+    ];
+  }
+
+  // Get payment methods (static data)
+  static getPaymentMethods() {
+    return [
+      { value: 'card', label: 'Credit/Debit Card' },
+      { value: 'cash', label: 'Cash' },
+      { value: 'wallet', label: 'Wallet' },
+      { value: 'bank_transfer', label: 'Bank Transfer' }
+    ];
+  }
+
+  // Get status color for UI
+  static getStatusColor(status) {
+    const statusColors = {
+      'pending': 'yellow',
+      'confirmed': 'blue',
+      'processing': 'blue',
+      'completed': 'green',
+      'cancelled': 'red',
+      'refunded': 'gray'
+    };
+    return statusColors[status?.toLowerCase()] || 'gray';
+  }
+
+  // Update order (general update method)
+  static async updateOrder(id, updateData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/bookings/${id}`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(updateData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        return {
+          success: true,
+          order: data.data?.booking || data.data,
+          message: data.message
+        };
+      } else {
+        throw new Error('Unexpected response format');
+      }
+    } catch (error) {
+      console.error('Error updating order:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 }

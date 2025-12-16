@@ -143,8 +143,29 @@ export default function DashboardPage() {
   };
 
   const handleAddNew = () => {
-    // Logic to handle "Add New" button click
-    console.log('Add new item for section:', activeSection);
+    // Logic to handle "Add New" button click based on active section
+    switch (activeSection) {
+      case 'categories':
+        setActiveSubItem('add-category');
+        break;
+      case 'users':
+        setActiveSubItem('add-user');
+        break;
+      case 'cities':
+        setActiveSubItem('add-city');
+        break;
+      case 'partners':
+        setActiveSubItem('add-partner');
+        break;
+      case 'branches':
+        setActiveSubItem('add-branch');
+        break;
+      case 'packages':
+        setActiveSubItem('create-package');
+        break;
+      default:
+        console.log('Add new item for section:', activeSection);
+    }
   };
 
   const handleExport = () => {
@@ -233,26 +254,49 @@ export default function DashboardPage() {
 
       {/* Main Content Area */}
       <div className={`flex-1 dashboard-content transition-all duration-300 ease-in-out ${collapsed ? 'ml-20' : 'ml-72'}`}>
-        <div className="h-full overflow-y-auto">
-          <div className="p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-              {/* Page Header */}
-              <div className="animate-fade-in">
-                <PageHeader
-                  title={SECTION_NAMES[activeSection]}
-                  subtitle={SUB_ITEM_NAMES[activeSubItem]}
-                  onAddNew={handleAddNew}
-                  onExport={handleExport}
-                  showActions={activeSubItem && !activeSubItem.includes('add-') && !activeSubItem.includes('create-') && !activeSubItem.includes('edit-')}
-                />
-              </div>
-
-              {/* Dynamic Content */}
-              <div className="animate-fade-in-up">
-                {renderMainContent()}
+        <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 to-slate-100">
+          {activeSection === 'overview' ? (
+            // Premium Overview Layout - No container, full width
+            <div className="p-8">
+              <div className="max-w-7xl mx-auto space-y-6">
+                {/* Minimal Header for Overview */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-2">
+                      Dashboard Overview
+                    </h1>
+                    <p className="text-slate-600">Welcome back! Here's what's happening today.</p>
+                  </div>
+                </div>
+                
+                {/* Dynamic Content */}
+                <div className="animate-fade-in-up">
+                  {renderMainContent()}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            // Standard Layout for Other Sections
+            <div className="p-8">
+              <div className="max-w-7xl mx-auto space-y-8">
+                {/* Page Header */}
+                <div className="animate-fade-in">
+                  <PageHeader
+                    title={SECTION_NAMES[activeSection]}
+                    subtitle={SUB_ITEM_NAMES[activeSubItem]}
+                    onAddNew={handleAddNew}
+                    onExport={handleExport}
+                    showActions={activeSubItem && !activeSubItem.includes('add-') && !activeSubItem.includes('create-') && !activeSubItem.includes('edit-')}
+                  />
+                </div>
+
+                {/* Dynamic Content */}
+                <div className="animate-fade-in-up">
+                  {renderMainContent()}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
