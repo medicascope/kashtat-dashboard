@@ -30,119 +30,82 @@ export default function Packages({ activeSubItem, onNavigate }) {
 
   const tableColumns = useMemo(() => [
     {
-      key: 'name',
+      key: 'title',
       label: 'Package Name',
       render: (value, pkg) => (
-        <div className="font-medium text-gray-900">
-          {pkg?.name || 'N/A'}
+        <div>
+          <div className="font-medium text-gray-900">{pkg?.title || pkg?.name || 'N/A'}</div>
+          <div className="text-xs text-slate-500 truncate max-w-xs">{pkg?.location || ''}</div>
         </div>
       )
     },
     {
-      key: 'type',
-      label: 'Type',
+      key: 'category_name',
+      label: 'Category',
       render: (value, pkg) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          pkg?.type === 'package' 
-            ? 'bg-blue-100 text-blue-800' 
-            : 'bg-purple-100 text-purple-800'
-        }`}>
-          {pkg?.type || 'N/A'}
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          {pkg?.category_name || pkg?.category || 'N/A'}
         </span>
       )
-    },
-    {
-      key: 'partner',
-      label: 'Partner',
-      render: (value, pkg) => {
-        const partner = pkg?.partner;
-        if (!partner) return <span className="text-gray-500">No Partner</span>;
-        
-        return (
-          <div className="flex items-center space-x-2">
-            <div className="flex-shrink-0 h-8 w-8">
-              {partner.image ? (
-                <img
-                  className="h-8 w-8 rounded-lg object-cover"
-                  src={partner.image}
-                  alt={partner?.name || 'Partner'}
-                />
-              ) : (
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-medium text-xs">
-                  {partner?.name ? partner.name.substring(0, 2).toUpperCase() : '??'}
-                </div>
-              )}
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {partner?.name || 'Unknown Partner'}
-              </p>
-            </div>
-          </div>
-        );
-      }
-    },
-    {
-      key: 'category',
-      label: 'Category',
-      render: (value, pkg) => {
-        const category = pkg?.category;
-        if (!category) return <span className="text-gray-500">No Category</span>;
-        
-        return (
-          <div className="flex items-center">
-            {category.image && (
-              <img
-                className="h-6 w-6 rounded mr-2"
-                src={category.image}
-                alt={category.name}
-              />
-            )}
-            <span className="text-sm text-gray-900">{category.name}</span>
-          </div>
-        );
-      }
     },
     {
       key: 'price',
-      label: 'Price Range',
-      render: (value, pkg) => {
-        const prices = pkg?.prices || [];
-        if (prices.length === 0) return <span className="text-gray-500">No pricing</span>;
-        
-        const minPrice = Math.min(...prices.map(p => parseFloat(p.price)));
-        const maxPrice = Math.max(...prices.map(p => parseFloat(p.price)));
-        
-        return (
-          <div className="text-sm text-gray-900">
-            {minPrice === maxPrice 
-              ? `$${minPrice.toFixed(2)}`
-              : `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`
-            }
-          </div>
-        );
-      }
-    },
-    {
-      key: 'due_date',
-      label: 'Due Date',
+      label: 'Price',
       render: (value, pkg) => (
-        <div className="text-sm text-gray-900">
-          {pkg?.due_date ? new Date(pkg.due_date).toLocaleDateString() : 'N/A'}
+        <div className="text-sm">
+          <div className="font-semibold text-slate-900">
+            {pkg?.price} {pkg?.currency || 'AED'}
+          </div>
+          {pkg?.original_price && pkg?.discount > 0 && (
+            <div className="text-xs text-slate-500">
+              <span className="line-through">{pkg.original_price}</span>
+              <span className="ml-1 text-green-600 font-medium">-{pkg.discount}%</span>
+            </div>
+          )}
         </div>
       )
     },
     {
-      key: 'status',
+      key: 'rating',
+      label: 'Rating',
+      render: (value, pkg) => (
+        <div className="text-sm">
+          <div className="flex items-center">
+            <span className="text-yellow-500 mr-1">★</span>
+            <span className="font-semibold text-slate-900">{pkg?.rating || '0.0'}</span>
+          </div>
+          <div className="text-xs text-slate-500">{pkg?.review_count || 0} reviews</div>
+        </div>
+      )
+    },
+    {
+      key: 'duration',
+      label: 'Duration',
+      render: (value, pkg) => (
+        <div className="text-sm text-slate-700">{pkg?.duration || 'N/A'}</div>
+      )
+    },
+    {
+      key: 'availability_available',
       label: 'Status',
       render: (value, pkg) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          pkg?.status === '1' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-red-100 text-red-800'
-        }`}>
-          {pkg?.status === '1' ? 'Active' : 'Inactive'}
-        </span>
+        <div className="flex flex-col gap-1">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            pkg?.availability_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {pkg?.availability_available ? 'Available' : 'Unavailable'}
+          </span>
+          {pkg?.is_popular === 1 && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              🔥 Popular
+            </span>
+          )}
+          {pkg?.is_recommended === 1 && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+              ⭐ Recommended
+            </span>
+          )}
+        </div>
       )
     }
   ], []);

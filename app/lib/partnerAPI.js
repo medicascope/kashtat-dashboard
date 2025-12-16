@@ -28,10 +28,12 @@ export class PartnerAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      // Handle backend response format: { success: true, data: { partners: [] } }
+      if (data.success && data.data) {
         return {
           success: true,
-          partners: data.partners || [],
+          partners: data.data.partners || data.data || [],
+          pagination: data.data.pagination,
           message: data.message
         };
       } else {
@@ -61,10 +63,10 @@ export class PartnerAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
         return {
           success: true,
-          partner: data.partner,
+          partner: data.data.partner || data.data,
           message: data.message
         };
       } else {
@@ -108,10 +110,10 @@ export class PartnerAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
         return {
           success: true,
-          partner: data.partner,
+          partner: data.data.partner || data.data,
           message: data.message
         };
       } else {
@@ -155,10 +157,10 @@ export class PartnerAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
         return {
           success: true,
-          partner: data.partner,
+          partner: data.data.partner || data.data,
           message: data.message
         };
       } else {

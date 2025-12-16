@@ -14,189 +14,48 @@ export class CityAPI {
     };
   }
 
-  // Get all cities (optionally filtered by country)
+  // Get all cities (NOT AVAILABLE - tourism system doesn't use cities)
   static async getCities(countryId = null) {
-    try {
-      let url = `${API_BASE_URL}/cities`;
-      if (countryId) {
-        url += `?country_id=${countryId}`;
-      }
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          cities: data.cities || [],
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error fetching cities:', error);
-      return {
-        success: false,
-        error: error.message,
-        cities: []
-      };
-    }
+    // Return empty array immediately without making API call
+    return {
+      success: true,
+      cities: [],
+      message: 'Cities feature is not available in the tourism booking system'
+    };
   }
 
-  // Get city by ID
+  // Get city by ID (NOT AVAILABLE)
   static async getCityById(id) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/cities/${id}`, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          city: data.city,
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error fetching city:', error);
-      return {
-        success: false,
-        error: error.message,
-        city: null
-      };
-    }
+    return {
+      success: false,
+      error: 'Cities feature is not available in the tourism booking system',
+      city: null
+    };
   }
 
-  // Create new city
+  // Create new city (NOT AVAILABLE)
   static async createCity(name, code, countryId) {
-    try {
-      const headers = {
-        ...this.getHeaders(),
-        'Content-Type': 'application/json'
-      };
-
-      const response = await fetch(`${API_BASE_URL}/cities`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          name: name,
-          code: code,
-          country_id: countryId
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          city: data.city,
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error creating city:', error);
-      return {
-        success: false,
-        error: error.message,
-        city: null
-      };
-    }
+    return {
+      success: false,
+      error: 'Cities feature is not available in the tourism booking system',
+      city: null
+    };
   }
 
-  // Update city
+  // Update city (NOT AVAILABLE)
   static async updateCity(id, name, code) {
-    try {
-      const headers = {
-        ...this.getHeaders(),
-        'Content-Type': 'application/json'
-      };
-
-      const response = await fetch(`${API_BASE_URL}/cities/${id}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify({
-          name: name,
-          code: code
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          city: data.city,
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error updating city:', error);
-      return {
-        success: false,
-        error: error.message,
-        city: null
-      };
-    }
+    return {
+      success: false,
+      error: 'Cities feature is not available in the tourism booking system',
+      city: null
+    };
   }
 
-  // Delete city
+  // Delete city (NOT AVAILABLE)
   static async deleteCity(id) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/cities/${id}`, {
-        method: 'DELETE',
-        headers: this.getHeaders(),
-      });
-
-      if (response.status === 204) {
-        return {
-          success: true,
-          message: 'City deleted successfully'
-        };
-      } else if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return {
-        success: true,
-        message: 'City deleted successfully'
-      };
-    } catch (error) {
-      console.error('Error deleting city:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
+    return {
+      success: false,
+      error: 'Cities feature is not available in the tourism booking system'
+    };
   }
 } 

@@ -2,7 +2,8 @@
 
 import { AuthService } from './auth';
 
-const API_BASE_URL = 'https://api.kashtat.co/v2/admin';
+// Packages = Tourism Packages (Aquaventure, Desert Safari, etc.)
+const API_BASE_URL = 'https://api.kashtat.co/v2';
 
 export class PackageAPI {
   static getHeaders() {
@@ -14,21 +15,19 @@ export class PackageAPI {
     };
   }
 
-  // ===== PACKAGES =====
-  
   // Get all packages
   static async getPackages(filters = {}) {
     try {
       const queryParams = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          queryParams.append(key, value);
-        }
-      });
+      if (filters.page) queryParams.append('page', filters.page);
+      if (filters.limit) queryParams.append('limit', filters.limit);
+      if (filters.category) queryParams.append('category', filters.category);
+      if (filters.minPrice) queryParams.append('minPrice', filters.minPrice);
+      if (filters.maxPrice) queryParams.append('maxPrice', filters.maxPrice);
+      if (filters.search) queryParams.append('search', filters.search);
 
-      const queryString = queryParams.toString();
-      const url = `${API_BASE_URL}/packages${queryString ? `?${queryString}` : ''}`;
-
+      const url = `${API_BASE_URL}/packages${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders(),
@@ -40,10 +39,33 @@ export class PackageAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
+        // Transform packages to match dashboard expectations
+        const transformedPackages = (data.data.packages || []).map(pkg => ({
+          ...pkg,
+          name: pkg.title, // Dashboard expects 'name', backend returns 'title'
+          type: 'package', // Dashboard expects 'type', backend doesn't have it
+          category: {
+            name: pkg.category_name || pkg.category,
+            id: pkg.category,
+            image: null // Category images not provided by backend
+          },
+          partner: pkg.partner_id ? {
+            id: pkg.partner_id,
+            name: 'Partner', // Partner details not included in package list
+            image: null
+          } : null,
+          prices: [ // Dashboard expects prices array
+            { type: 'Adult', price: pkg.pricing_adults || pkg.price || '0' },
+            { type: 'Child', price: pkg.pricing_children || pkg.price || '0' },
+            { type: 'Infant', price: pkg.pricing_infants || '0' }
+          ]
+        }));
+        
         return {
           success: true,
-          packages: data.packages || [],
+          packages: transformedPackages,
+          pagination: data.data.pagination || {},
           message: data.message
         };
       } else {
@@ -73,10 +95,33 @@ export class PackageAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
+        const pkg = data.data.package || data.data;
+        // Transform package to match dashboard expectations
+        const transformedPackage = {
+          ...pkg,
+          name: pkg.title,
+          type: 'package',
+          category: {
+            name: pkg.category_name || pkg.category,
+            id: pkg.category,
+            image: null
+          },
+          partner: pkg.partner_id ? {
+            id: pkg.partner_id,
+            name: 'Partner',
+            image: null
+          } : null,
+          prices: [
+            { type: 'Adult', price: pkg.pricing_adults || pkg.price || '0' },
+            { type: 'Child', price: pkg.pricing_children || pkg.price || '0' },
+            { type: 'Infant', price: pkg.pricing_infants || '0' }
+          ]
+        };
+        
         return {
           success: true,
-          package: data.package,
+          package: transformedPackage,
           message: data.message
         };
       } else {
@@ -92,147 +137,171 @@ export class PackageAPI {
     }
   }
 
-  // Create package
-  static async createPackage(packageData) {
+  // Get popular packages
+  static async getPopularPackages() {
     try {
-      // Validate required fields
-      if (!packageData.name || !packageData.overview || !packageData.partner_id || !packageData.category_id) {
-        throw new Error('Name, overview, partner, and category are required fields');
-      }
-
-      const formData = new FormData();
-      
-      // Basic fields
-      formData.append('name', packageData.name);
-      formData.append('overview', packageData.overview);
-      formData.append('type', packageData.type);
-      formData.append('working_days', packageData.working_days || 'sunday,monday,tuesday,wednesday,thursday');
-      formData.append('discount_percentage', packageData.discount_percentage || '0');
-      
-      // Convert due_date from YYYY-MM-DD to DD-MM-YYYY format for API
-      let dueDate = packageData.due_date || '2025-12-31';
-      if (dueDate) {
-        const dateParts = dueDate.split('-');
-        if (dateParts.length === 3) {
-          dueDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-        }
-      }
-      formData.append('due_date', dueDate);
-      formData.append('order_id', packageData.order_id || '0');
-      formData.append('full_refund_within', packageData.full_refund_within || '30');
-      formData.append('partial_refund_within', packageData.partial_refund_within || '15');
-      formData.append('partial_refund_percentage', packageData.partial_refund_percentage || '10');
-      formData.append('partner_id', packageData.partner_id);
-      
-      // Category is now required
-      formData.append('category_id', packageData.category_id);
-      
-      formData.append('status', packageData.status || '1');
-
-      // Arrays - only send if they have valid values
-      if (packageData.speaker_ids && packageData.speaker_ids.length > 0) {
-        packageData.speaker_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('speaker_ids[]', id);
-          }
-        });
-      }
-
-      if (packageData.entertainment_ids && packageData.entertainment_ids.length > 0) {
-        packageData.entertainment_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('entertainment_ids[]', id);
-          }
-        });
-      }
-
-      if (packageData.rule_ids && packageData.rule_ids.length > 0) {
-        packageData.rule_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('rule_ids[]', id);
-          }
-        });
-      }
-
-      if (packageData.image_ids && packageData.image_ids.length > 0) {
-        packageData.image_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('image_ids[]', id);
-          }
-        });
-      }
-
-      if (packageData.branch_ids && packageData.branch_ids.length > 0) {
-        packageData.branch_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('branch_ids[]', id);
-          }
-        });
-      }
-
-      // Prices - Add default pricing if none provided
-      const prices = packageData.prices && packageData.prices.length > 0 
-        ? packageData.prices 
-        : [{ price: '100', user_type: 'citizen', age_group: 'adult' }];
-      
-      prices.forEach((price, index) => {
-        formData.append(`prices[${index}][price]`, price.price);
-        formData.append(`prices[${index}][user_type]`, price.user_type);
-        formData.append(`prices[${index}][age_group]`, price.age_group);
-      });
-
-      // Cover image
-      if (packageData.cover_image) {
-        formData.append('cover_image', packageData.cover_image);
-      }
-
-      const headers = this.getHeaders();
-      delete headers['Content-Type'];
-
-      // Debug: Log what we're sending
-      console.log('Creating package with data:', {
-        name: packageData.name,
-        partner_id: packageData.partner_id,
-        category_id: packageData.category_id,
-        due_date: dueDate,
-        type: packageData.type
-      });
-
-      const response = await fetch(`${API_BASE_URL}/packages`, {
-        method: 'POST',
-        headers,
-        body: formData,
+      const response = await fetch(`${API_BASE_URL}/packages/popular`, {
+        method: 'GET',
+        headers: this.getHeaders(),
       });
 
       if (!response.ok) {
-        // Try to get the error response body
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          if (errorData.message) {
-            errorMessage = errorData.message;
-          }
-          if (errorData.errors) {
-            const validationErrors = Object.entries(errorData.errors)
-              .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-              .join('; ');
-            errorMessage = validationErrors;
-          }
-        } catch (parseError) {
-          console.error('Error parsing error response:', parseError);
-        }
-        
-        const error = new Error(errorMessage);
-        error.response = response;
-        throw error;
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
+        // Transform packages to match dashboard expectations
+        const transformedPackages = (data.data.packages || []).map(pkg => ({
+          ...pkg,
+          name: pkg.title,
+          type: 'package',
+          category: {
+            name: pkg.category_name || pkg.category,
+            id: pkg.category,
+            image: null
+          },
+          partner: pkg.partner_id ? {
+            id: pkg.partner_id,
+            name: 'Partner',
+            image: null
+          } : null,
+          prices: [
+            { type: 'Adult', price: pkg.pricing_adults || pkg.price || '0' },
+            { type: 'Child', price: pkg.pricing_children || pkg.price || '0' },
+            { type: 'Infant', price: pkg.pricing_infants || '0' }
+          ]
+        }));
+        
         return {
           success: true,
-          package: data.package,
+          packages: transformedPackages,
+          message: data.message
+        };
+      } else {
+        throw new Error('Unexpected response format');
+      }
+    } catch (error) {
+      console.error('Error fetching popular packages:', error);
+      return {
+        success: false,
+        error: error.message,
+        packages: []
+      };
+    }
+  }
+
+  // Search packages
+  static async searchPackages(searchTerm) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/packages/search?q=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        // Transform packages to match dashboard expectations
+        const transformedPackages = (data.data.packages || []).map(pkg => ({
+          ...pkg,
+          name: pkg.title,
+          type: 'package',
+          category: {
+            name: pkg.category_name || pkg.category,
+            id: pkg.category,
+            image: null
+          },
+          partner: pkg.partner_id ? {
+            id: pkg.partner_id,
+            name: 'Partner',
+            image: null
+          } : null,
+          prices: [
+            { type: 'Adult', price: pkg.pricing_adults || pkg.price || '0' },
+            { type: 'Child', price: pkg.pricing_children || pkg.price || '0' },
+            { type: 'Infant', price: pkg.pricing_infants || '0' }
+          ]
+        }));
+        
+        return {
+          success: true,
+          packages: transformedPackages,
+          message: data.message
+        };
+      } else {
+        throw new Error('Unexpected response format');
+      }
+    } catch (error) {
+      console.error('Error searching packages:', error);
+      return {
+        success: false,
+        error: error.message,
+        packages: []
+      };
+    }
+  }
+
+  // Create package (Admin only - requires admin authentication)
+  static async createPackage(packageData) {
+    try {
+      const formData = new FormData();
+      
+      // Add all package fields
+      Object.keys(packageData).forEach(key => {
+        if (key === 'imageFile' || key === 'imageFiles') {
+          // Handle image files separately
+          return;
+        }
+        
+        const value = packageData[key];
+        if (value !== undefined && value !== null) {
+          // Convert arrays and objects to JSON strings
+          if (Array.isArray(value) || typeof value === 'object') {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value);
+          }
+        }
+      });
+      
+      // Add main image file if provided
+      if (packageData.imageFile) {
+        formData.append('image', packageData.imageFile);
+      }
+      
+      // Add multiple image files if provided
+      if (packageData.imageFiles && Array.isArray(packageData.imageFiles)) {
+        packageData.imageFiles.forEach((file, index) => {
+          formData.append('images', file);
+        });
+      }
+
+      const headers = this.getHeaders();
+      delete headers['Content-Type']; // Let browser set it for FormData
+
+      const response = await fetch(`${API_BASE_URL}/packages`, {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        return {
+          success: true,
+          package: data.data.package,
           message: data.message
         };
       } else {
@@ -248,147 +317,61 @@ export class PackageAPI {
     }
   }
 
-  // Update package
+  // Update package (Admin only)
   static async updatePackage(id, packageData) {
     try {
-      // Validate required fields
-      if (!packageData.name || !packageData.overview || !packageData.partner_id || !packageData.category_id) {
-        throw new Error('Name, overview, partner, and category are required fields');
-      }
-
       const formData = new FormData();
       
-      // Basic fields
-      formData.append('name', packageData.name);
-      formData.append('overview', packageData.overview);
-      formData.append('type', packageData.type);
-      formData.append('working_days', packageData.working_days || 'sunday,monday,tuesday,wednesday,thursday');
-      formData.append('discount_percentage', packageData.discount_percentage || '0');
-      
-      // Convert due_date from YYYY-MM-DD to DD-MM-YYYY format for API
-      let dueDate = packageData.due_date || '2025-12-31';
-      if (dueDate) {
-        const dateParts = dueDate.split('-');
-        if (dateParts.length === 3) {
-          dueDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+      // Add all package fields
+      Object.keys(packageData).forEach(key => {
+        if (key === 'imageFile' || key === 'imageFiles') {
+          // Handle image files separately
+          return;
         }
-      }
-      formData.append('due_date', dueDate);
-      formData.append('order_id', packageData.order_id || '0');
-      formData.append('full_refund_within', packageData.full_refund_within || '30');
-      formData.append('partial_refund_within', packageData.partial_refund_within || '15');
-      formData.append('partial_refund_percentage', packageData.partial_refund_percentage || '10');
-      formData.append('partner_id', packageData.partner_id);
-      
-      // Category is now required
-      formData.append('category_id', packageData.category_id);
-      
-      formData.append('status', packageData.status || '1');
-
-      // Arrays - only send if they have valid values
-      if (packageData.speaker_ids && packageData.speaker_ids.length > 0) {
-        packageData.speaker_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('speaker_ids[]', id);
+        
+        const value = packageData[key];
+        if (value !== undefined && value !== null) {
+          // Convert arrays and objects to JSON strings
+          if (Array.isArray(value) || typeof value === 'object') {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value);
           }
-        });
-      }
-
-      if (packageData.entertainment_ids && packageData.entertainment_ids.length > 0) {
-        packageData.entertainment_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('entertainment_ids[]', id);
-          }
-        });
-      }
-
-      if (packageData.rule_ids && packageData.rule_ids.length > 0) {
-        packageData.rule_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('rule_ids[]', id);
-          }
-        });
-      }
-
-      if (packageData.image_ids && packageData.image_ids.length > 0) {
-        packageData.image_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('image_ids[]', id);
-          }
-        });
-      }
-
-      if (packageData.branch_ids && packageData.branch_ids.length > 0) {
-        packageData.branch_ids.forEach(id => {
-          if (id && id.trim() !== '') {
-            formData.append('branch_ids[]', id);
-          }
-        });
-      }
-
-      // Prices - Add default pricing if none provided
-      const prices = packageData.prices && packageData.prices.length > 0 
-        ? packageData.prices 
-        : [{ price: '100', user_type: 'citizen', age_group: 'adult' }];
-      
-      prices.forEach((price, index) => {
-        formData.append(`prices[${index}][price]`, price.price);
-        formData.append(`prices[${index}][user_type]`, price.user_type);
-        formData.append(`prices[${index}][age_group]`, price.age_group);
+        }
       });
-
-      // Cover image
-      if (packageData.cover_image) {
-        formData.append('cover_image', packageData.cover_image);
+      
+      // Add main image file if provided
+      if (packageData.imageFile) {
+        formData.append('image', packageData.imageFile);
+      }
+      
+      // Add multiple image files if provided
+      if (packageData.imageFiles && Array.isArray(packageData.imageFiles)) {
+        packageData.imageFiles.forEach((file, index) => {
+          formData.append('images', file);
+        });
       }
 
       const headers = this.getHeaders();
-      delete headers['Content-Type'];
-
-      // Debug: Log what we're sending
-      console.log('Updating package with data:', {
-        name: packageData.name,
-        partner_id: packageData.partner_id,
-        category_id: packageData.category_id,
-        due_date: dueDate,
-        type: packageData.type
-      });
+      delete headers['Content-Type']; // Let browser set it for FormData
 
       const response = await fetch(`${API_BASE_URL}/packages/${id}`, {
-        method: 'POST',
+        method: 'PUT',
         headers,
-        body: formData,
+        body: formData
       });
 
       if (!response.ok) {
-        // Try to get the error response body
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          if (errorData.message) {
-            errorMessage = errorData.message;
-          }
-          if (errorData.errors) {
-            const validationErrors = Object.entries(errorData.errors)
-              .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-              .join('; ');
-            errorMessage = validationErrors;
-          }
-        } catch (parseError) {
-          console.error('Error parsing error response:', parseError);
-        }
-        
-        const error = new Error(errorMessage);
-        error.response = response;
-        throw error;
+        const error = await response.json();
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
         return {
           success: true,
-          package: data.package,
+          package: data.data.package,
           message: data.message
         };
       } else {
@@ -404,28 +387,24 @@ export class PackageAPI {
     }
   }
 
-  // Delete package
+  // Delete package (Admin only)
   static async deletePackage(id) {
     try {
-      // Use the correct delete URL pattern from scheme
-      const deleteUrl = `https://app.kashtat.co/api/v1/admin/packages/${id}`;
-      const response = await fetch(deleteUrl, {
+      const response = await fetch(`${API_BASE_URL}/packages/${id}`, {
         method: 'DELETE',
         headers: this.getHeaders(),
       });
 
-      if (response.status === 204) {
-        return {
-          success: true,
-          message: 'Package deleted successfully'
-        };
-      } else if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
+      
       return {
         success: true,
-        message: 'Package deleted successfully'
+        message: data.message
       };
     } catch (error) {
       console.error('Error deleting package:', error);
@@ -436,316 +415,33 @@ export class PackageAPI {
     }
   }
 
-  // ===== PACKAGE PRICES =====
-
-  // Get package prices
-  static async getPackagePrices(packageId = null) {
-    try {
-      const body = packageId ? JSON.stringify({ package_id: packageId }) : '';
-      
-      const response = await fetch(`${API_BASE_URL}/package_prices`, {
-        method: 'GET',
-        headers: this.getHeaders(),
-        ...(body && { body })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          prices: data.prices || [],
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error fetching package prices:', error);
-      return {
-        success: false,
-        error: error.message,
-        prices: []
-      };
-    }
-  }
-
-  // Create package price
-  static async createPackagePrice(priceData) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/package_prices`, {
-        method: 'POST',
-        headers: {
-          ...this.getHeaders(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(priceData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          price: data.price,
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error creating package price:', error);
-      return {
-        success: false,
-        error: error.message,
-        price: null
-      };
-    }
-  }
-
-  // ===== PACKAGE RULES =====
-
-  // Get package rules
-  static async getPackageRules() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/package_rules`, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          rules: data.rules || [],
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error fetching package rules:', error);
-      return {
-        success: false,
-        error: error.message,
-        rules: []
-      };
-    }
-  }
-
-  // Create package rule
-  static async createPackageRule(ruleData) {
-    try {
-      const formData = new FormData();
-      formData.append('name', ruleData.name);
-      formData.append('description', ruleData.description);
-      if (ruleData.icon) {
-        formData.append('icon', ruleData.icon);
-      }
-
-      const headers = this.getHeaders();
-      delete headers['Content-Type'];
-
-      const response = await fetch(`${API_BASE_URL}/package_rules`, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          rule: data.rule,
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error creating package rule:', error);
-      return {
-        success: false,
-        error: error.message,
-        rule: null
-      };
-    }
-  }
-
-  // ===== PACKAGE SPEAKERS =====
-
-  // Get package speakers
+  // Get package speakers (NOT APPLICABLE - tourism system)
+  // This method exists for compatibility with dashboard
   static async getPackageSpeakers() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/package_speakers`, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          speakers: data.speakers || [],
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error fetching package speakers:', error);
-      return {
-        success: false,
-        error: error.message,
-        speakers: []
-      };
-    }
+    return {
+      success: true,
+      speakers: [],
+      message: 'Speakers are not applicable for tourism packages'
+    };
   }
 
-  // Create package speaker
-  static async createPackageSpeaker(speakerData) {
-    try {
-      const formData = new FormData();
-      formData.append('name', speakerData.name);
-      formData.append('overview', speakerData.overview);
-      if (speakerData.image) {
-        formData.append('image', speakerData.image);
-      }
-
-      const headers = this.getHeaders();
-      delete headers['Content-Type'];
-
-      const response = await fetch(`${API_BASE_URL}/package_speakers`, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          speaker: data.speaker,
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error creating package speaker:', error);
-      return {
-        success: false,
-        error: error.message,
-        speaker: null
-      };
-    }
-  }
-
-  // ===== PACKAGE ENTERTAINMENTS =====
-
-  // Get package entertainments
+  // Get package entertainments (NOT APPLICABLE - tourism system)
+  // This method exists for compatibility with dashboard
   static async getPackageEntertainments() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/package_entertainments`, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          entertainments: data.entertainments || [],
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error fetching package entertainments:', error);
-      return {
-        success: false,
-        error: error.message,
-        entertainments: []
-      };
-    }
+    return {
+      success: true,
+      entertainments: [],
+      message: 'Entertainments are managed within package amenities'
+    };
   }
 
-  // Create package entertainment
-  static async createPackageEntertainment(entertainmentData) {
-    try {
-      const formData = new FormData();
-      formData.append('name', entertainmentData.name);
-      formData.append('description', entertainmentData.description);
-      formData.append('package_id', entertainmentData.package_id);
-      if (entertainmentData.icon) {
-        formData.append('icon', entertainmentData.icon);
-      }
-
-      const headers = this.getHeaders();
-      delete headers['Content-Type'];
-
-      const response = await fetch(`${API_BASE_URL}/package_entertainments`, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'object') {
-        return {
-          success: true,
-          entertainment: data.entertainment,
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-    } catch (error) {
-      console.error('Error creating package entertainment:', error);
-      return {
-        success: false,
-        error: error.message,
-        entertainment: null
-      };
-    }
+  // Get package rules (NOT APPLICABLE - tourism system)
+  // This method exists for compatibility with dashboard
+  static async getPackageRules() {
+    return {
+      success: true,
+      rules: [],
+      message: 'Rules are managed within package policies'
+    };
   }
-} 
+}

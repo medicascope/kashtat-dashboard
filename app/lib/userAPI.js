@@ -28,10 +28,12 @@ export class UserAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      // Handle backend response format: { success: true, data: { users: [], pagination: {} } }
+      if (data.success && data.data && data.data.users) {
         return {
           success: true,
-          users: data.users || [],
+          users: data.data.users,
+          pagination: data.data.pagination,
           message: data.message
         };
       } else {
@@ -61,7 +63,7 @@ export class UserAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success) {
         return {
           success: true,
           user: data.user,
@@ -109,7 +111,7 @@ export class UserAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success) {
         return {
           success: true,
           user: data.user,
@@ -159,7 +161,7 @@ export class UserAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success) {
         return {
           success: true,
           user: data.user,

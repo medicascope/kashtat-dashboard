@@ -62,16 +62,16 @@ const TABLE_COLUMNS = [
   {
     key: 'id',
     label: 'ID',
-    render: (value) => <span className="text-sm text-slate-500 font-mono">#{value.substring(0, 8)}...</span>
+    render: (value) => <span className="text-sm text-slate-500 font-mono">#{String(value)}</span>
   },
   {
-    key: 'avatar',
+    key: 'image',
     label: 'Avatar',
     render: (value, user) => (
       value ? (
         <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border border-slate-200">
           <img 
-            src={value.startsWith('http') ? value : `https://app.kashtat.co/${value}`} 
+            src={String(value).startsWith('http') ? value : `https://app.kashtat.co/${value}`} 
             alt={user.name} 
             className="w-full h-full object-cover"
           />

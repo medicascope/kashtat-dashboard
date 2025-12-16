@@ -12,9 +12,11 @@ import Partners from '@/components/sections/Partners';
 import Branches from '@/components/sections/Branches';
 import Packages from '@/components/sections/Packages';
 import Orders from '@/components/sections/Orders';
+import Overview from '@/components/sections/Overview';
 
 // Mapping sections to their components
 const SECTION_COMPONENTS = {
+  overview: Overview,
   categories: Categories,
   countries: Countries,
   users: Users,
@@ -23,11 +25,11 @@ const SECTION_COMPONENTS = {
   branches: Branches,
   packages: Packages,
   orders: Orders,
-  // TODO: Add other section components as they are created
 };
 
 // Section names for display
 const SECTION_NAMES = {
+  overview: 'Dashboard Overview',
   categories: 'Categories',
   countries: 'Countries',
   users: 'Users',
@@ -73,8 +75,8 @@ const SUB_ITEM_NAMES = {
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState('categories');
-  const [activeSubItem, setActiveSubItem] = useState('get-categories');
+  const [activeSection, setActiveSection] = useState('overview');
+  const [activeSubItem, setActiveSubItem] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -100,6 +102,9 @@ export default function DashboardPage() {
 
     // Set default sub-item for each section
     switch (sectionId) {
+      case 'overview':
+        setActiveSubItem(null);
+        break;
       case 'categories':
         setActiveSubItem('get-categories');
         break;
@@ -238,7 +243,7 @@ export default function DashboardPage() {
                   subtitle={SUB_ITEM_NAMES[activeSubItem]}
                   onAddNew={handleAddNew}
                   onExport={handleExport}
-                  showActions={!activeSubItem.includes('add-') && !activeSubItem.includes('create-') && !activeSubItem.includes('edit-')}
+                  showActions={activeSubItem && !activeSubItem.includes('add-') && !activeSubItem.includes('create-') && !activeSubItem.includes('edit-')}
                 />
               </div>
 

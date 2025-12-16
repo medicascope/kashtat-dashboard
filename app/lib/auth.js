@@ -42,15 +42,41 @@ export class AuthService {
   }
 
   static getToken() {
-    return typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      // Handle edge cases: null, undefined, or the string "undefined"
+      if (!token || token === 'undefined' || token === 'null') {
+        return null;
+      }
+      return token;
+    }
+    return null;
   }
 
   static getUser() {
     if (typeof window !== 'undefined') {
       const user = localStorage.getItem('user');
-      return user ? JSON.parse(user) : null;
+      // Handle edge cases: null, undefined, or the string "undefined"
+      if (!user || user === 'undefined' || user === 'null') {
+        return null;
+      }
+      try {
+        return JSON.parse(user);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        return null;
+      }
     }
     return null;
+  }
+
+  static isAuthenticated() {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    const token = this.getToken();
+    const user = this.getUser();
+    return !!(token && user);
   }
 
 } 

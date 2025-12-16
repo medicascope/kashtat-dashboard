@@ -2,7 +2,10 @@
 
 import { AuthService } from './auth';
 
-const API_BASE_URL = 'https://api.kashtat.co/v2/admin';
+// Categories in kashtat-backend are "Package Categories" (tourism types)
+// Public endpoint: /v2/packages/categories
+// Admin endpoints: /v2/admin/packages/categories
+const API_BASE_URL = 'https://api.kashtat.co/v2';
 
 export class CategoryAPI {
   static getHeaders() {
@@ -14,10 +17,10 @@ export class CategoryAPI {
     };
   }
 
-  // Get all categories
+  // Get all categories (Package Categories)
   static async getCategories() {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories`, {
+      const response = await fetch(`${API_BASE_URL}/packages/categories`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -28,11 +31,12 @@ export class CategoryAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      // Backend returns: { success: true, data: { categories: [...] } }
+      if (data.success && data.data) {
         return {
           success: true,
-          categories: data.categories || [],
-          message: data.message
+          categories: data.data.categories || [],
+          message: data.message || 'Categories retrieved successfully'
         };
       } else {
         throw new Error('Unexpected response format');
@@ -50,26 +54,28 @@ export class CategoryAPI {
   // Get category by ID
   static async getCategoryById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      // Note: Backend doesn't have a single category endpoint
+      // We fetch all and filter client-side
+      const allCategories = await this.getCategories();
       
-      if (data.status === 'object') {
-        return {
-          success: true,
-          category: data.category,
-          message: data.message
-        };
-      } else {
-        throw new Error('Unexpected response format');
+      if (allCategories.success) {
+        const category = allCategories.categories.find(c => c.id === id);
+        if (category) {
+          return {
+            success: true,
+            category,
+            message: 'Category found'
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Category not found',
+            category: null
+          };
+        }
       }
+      
+      return allCategories;
     } catch (error) {
       console.error('Error fetching category:', error);
       return {
@@ -80,35 +86,44 @@ export class CategoryAPI {
     }
   }
 
-  // Create new category
-  static async createCategory(name, imageFile) {
+  // Create new category (Admin only)
+  static async createCategory(categoryData) {
     try {
       const formData = new FormData();
-      formData.append('name', name);
-      if (imageFile) {
-        formData.append('image', imageFile);
+      
+      // Add text fields
+      if (categoryData.id) formData.append('id', categoryData.id);
+      if (categoryData.name) formData.append('name', categoryData.name);
+      if (categoryData.icon) formData.append('icon', categoryData.icon);
+      if (categoryData.description) formData.append('description', categoryData.description);
+      
+      // Add image file if provided
+      if (categoryData.imageFile) {
+        formData.append('image', categoryData.imageFile);
+      } else if (categoryData.image) {
+        formData.append('image', categoryData.image);
       }
 
       const headers = this.getHeaders();
-      // Remove Content-Type to let browser set it with boundary for FormData
-      delete headers['Content-Type'];
+      delete headers['Content-Type']; // Let browser set it for FormData
 
-      const response = await fetch(`${API_BASE_URL}/categories`, {
+      const response = await fetch(`${API_BASE_URL}/admin/packages/categories`, {
         method: 'POST',
         headers,
-        body: formData,
+        body: formData
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
         return {
           success: true,
-          category: data.category,
+          category: data.data.category,
           message: data.message
         };
       } else {
@@ -124,35 +139,44 @@ export class CategoryAPI {
     }
   }
 
-  // Update category
-  static async updateCategory(id, name, imageFile) {
+  // Update category (Admin only)
+  static async updateCategory(id, categoryData) {
     try {
       const formData = new FormData();
-      formData.append('name', name);
-      if (imageFile) {
-        formData.append('image', imageFile);
+      
+      // Add text fields
+      if (categoryData.name !== undefined) formData.append('name', categoryData.name);
+      if (categoryData.icon !== undefined) formData.append('icon', categoryData.icon);
+      if (categoryData.description !== undefined) formData.append('description', categoryData.description);
+      if (categoryData.sort_order !== undefined) formData.append('sort_order', categoryData.sort_order);
+      
+      // Add image file if provided
+      if (categoryData.imageFile) {
+        formData.append('image', categoryData.imageFile);
+      } else if (categoryData.image !== undefined) {
+        formData.append('image', categoryData.image);
       }
 
       const headers = this.getHeaders();
-      // Remove Content-Type to let browser set it with boundary for FormData
-      delete headers['Content-Type'];
+      delete headers['Content-Type']; // Let browser set it for FormData
 
-      const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
-        method: 'POST', // API uses POST for updates
+      const response = await fetch(`${API_BASE_URL}/admin/packages/categories/${id}`, {
+        method: 'PUT',
         headers,
-        body: formData,
+        body: formData
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
         return {
           success: true,
-          category: data.category,
+          category: data.data.category,
           message: data.message
         };
       } else {
@@ -168,26 +192,24 @@ export class CategoryAPI {
     }
   }
 
-  // Delete category
+  // Delete category (Admin only)
   static async deleteCategory(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/packages/categories/${id}`, {
         method: 'DELETE',
         headers: this.getHeaders(),
       });
 
-      if (response.status === 204) {
-        return {
-          success: true,
-          message: 'Category deleted successfully'
-        };
-      } else if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
+      
       return {
         success: true,
-        message: 'Category deleted successfully'
+        message: data.message
       };
     } catch (error) {
       console.error('Error deleting category:', error);

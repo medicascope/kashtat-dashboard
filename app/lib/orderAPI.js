@@ -2,6 +2,8 @@
 
 import { AuthService } from './auth';
 
+// Orders in kashtat-backend are called "Bookings"
+// Route: /v2/admin/bookings
 const API_BASE_URL = 'https://api.kashtat.co/v2/admin';
 
 export class OrderAPI {
@@ -10,23 +12,22 @@ export class OrderAPI {
     return {
       'Accept': 'application/json',
       'Accept-Language': 'en',
+      'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` })
     };
   }
 
-  // Get all orders
+  // Get all orders (bookings)
   static async getOrders(filters = {}) {
     try {
       const queryParams = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          queryParams.append(key, value);
-        }
-      });
+      if (filters.page) queryParams.append('page', filters.page);
+      if (filters.limit) queryParams.append('limit', filters.limit);
+      if (filters.status) queryParams.append('status', filters.status);
+      if (filters.userId) queryParams.append('userId', filters.userId);
 
-      const queryString = queryParams.toString();
-      const url = `${API_BASE_URL}/orders${queryString ? `?${queryString}` : ''}`;
-
+      const url = `${API_BASE_URL}/bookings${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders(),
@@ -38,10 +39,11 @@ export class OrderAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
         return {
           success: true,
-          orders: data.orders || [],
+          orders: data.data.bookings || [],
+          pagination: data.data.pagination || {},
           message: data.message
         };
       } else {
@@ -60,7 +62,7 @@ export class OrderAPI {
   // Get order by ID
   static async getOrderById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/bookings/${id}`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -71,10 +73,10 @@ export class OrderAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success && data.data) {
         return {
           success: true,
-          order: data.order,
+          order: data.data.booking || data.data,
           message: data.message
         };
       } else {
@@ -90,23 +92,13 @@ export class OrderAPI {
     }
   }
 
-  // Update order (mainly for status updates)
-  static async updateOrder(id, orderData) {
+  // Update order status
+  static async updateOrderStatus(id, status) {
     try {
-      const formData = new FormData();
-      
-      // Add status field
-      if (orderData.status) {
-        formData.append('status', orderData.status);
-      }
-
-      const headers = this.getHeaders();
-      delete headers['Content-Type'];
-
-      const response = await fetch(`${API_BASE_URL}/orders/${id}`, {
-        method: 'POST',
-        headers,
-        body: formData,
+      const response = await fetch(`${API_BASE_URL}/bookings/${id}/status`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ status })
       });
 
       if (!response.ok) {
@@ -115,45 +107,74 @@ export class OrderAPI {
 
       const data = await response.json();
       
-      if (data.status === 'object') {
+      if (data.success) {
         return {
           success: true,
-          order: data.order,
+          order: data.data?.booking || data.data,
           message: data.message
         };
       } else {
         throw new Error('Unexpected response format');
       }
     } catch (error) {
-      console.error('Error updating order:', error);
+      console.error('Error updating order status:', error);
       return {
         success: false,
-        error: error.message,
-        order: null
+        error: error.message
       };
     }
   }
 
-  // Delete order
+  // Get order statistics
+  static async getOrderStats() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/bookings/stats`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        return {
+          success: true,
+          stats: data.data,
+          message: data.message
+        };
+      } else {
+        throw new Error('Unexpected response format');
+      }
+    } catch (error) {
+      console.error('Error fetching order stats:', error);
+      return {
+        success: false,
+        error: error.message,
+        stats: null
+      };
+    }
+  }
+
+  // Delete/Cancel order
   static async deleteOrder(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/bookings/${id}`, {
         method: 'DELETE',
         headers: this.getHeaders(),
       });
 
-      if (response.status === 204 || response.status === 200) {
-        return {
-          success: true,
-          message: 'Order deleted successfully'
-        };
-      } else if (!response.ok) {
+      if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
+      
       return {
         success: true,
-        message: 'Order deleted successfully'
+        message: data.message || 'Order cancelled successfully'
       };
     } catch (error) {
       console.error('Error deleting order:', error);
@@ -163,23 +184,4 @@ export class OrderAPI {
       };
     }
   }
-
-  // Get order statuses (common statuses for dropdown)
-  static getOrderStatuses() {
-    return [
-      { value: 'pending', label: 'Pending', color: 'yellow' },
-      { value: 'confirmed', label: 'Confirmed', color: 'blue' },
-      { value: 'processing', label: 'Processing', color: 'purple' },
-      { value: 'completed', label: 'Completed', color: 'green' },
-      { value: 'cancelled', label: 'Cancelled', color: 'red' },
-      { value: 'refunded', label: 'Refunded', color: 'gray' }
-    ];
-  }
-
-  // Get status color for UI
-  static getStatusColor(status) {
-    const statuses = this.getOrderStatuses();
-    const statusObj = statuses.find(s => s.value === status);
-    return statusObj ? statusObj.color : 'gray';
-  }
-} 
+}
